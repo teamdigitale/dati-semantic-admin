@@ -2,6 +2,9 @@
 # Sovrascrive i default puntando a Keycloak/BE locali avviati via docker-compose.
 
 spring:
+  output:
+    ansi:
+      enabled: always
   security:
     oauth2:
       client:
