@@ -8,7 +8,8 @@ export const queryKeys = {
   harvestRunning: ['harvest', 'running'] as const,
   latestDelta: (repoId: string) => ['audit', repoId, 'latest-delta'] as const,
   latestDeltaSummary: (repoId: string) => ['audit', repoId, 'latest-delta', 'summary'] as const,
-  changelog: (offset: number, limit: number) => ['audit', 'changelog', offset, limit] as const,
+  changelog: (iri: string, offset: number, limit: number) =>
+    ['audit', 'changelog', iri, offset, limit] as const,
   dashboardCount: (filters: unknown) => ['dashboard', 'count', filters] as const,
   dashboardTime: (filters: unknown) => ['dashboard', 'time', filters] as const,
 }

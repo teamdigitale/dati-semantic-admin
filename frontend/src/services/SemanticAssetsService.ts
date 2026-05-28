@@ -1,23 +1,52 @@
 import { NdcClient } from '../api/NdcClient'
+import type { ChangeKind, SemanticAssetType } from '../api/types/audit'
 
+/**
+ * Una voce del changelog: un cambio applicato all'asset (identificato dall'IRI a livello pagina)
+ * in uno specifico harvest run di uno specifico repository.
+ */
 export interface SemanticAssetChangelogEntry {
-  assetIri: string
-  changeKind: string
-  occurredAt: string
-  runId?: string
-  [key: string]: unknown
+  runId: string
+  repositoryId: string
+  revision?: string
+  revisionCommittedAt?: string
+  createdAt: string
+  changeKind: ChangeKind
+  summary?: unknown
 }
 
 export interface SemanticAssetChangelogPage {
+  assetIri: string
+  assetType?: SemanticAssetType
   content: SemanticAssetChangelogEntry[]
-  total: number
   offset: number
   limit: number
+  total: number
+}
+
+interface ChangelogQuery {
+  iri: string
+  changeKind?: ChangeKind[]
+  since?: string
+  until?: string
+  offset?: number
+  limit?: number
 }
 
 export const SemanticAssetsService = {
-  changelog: (opts: { offset?: number; limit?: number } = {}) =>
+  /**
+   * Time-series dei cambi per uno specifico asset semantico (cross-repo), ordinati per createdAt DESC.
+   * NB: il backend richiede `iri` come query param obbligatorio.
+   */
+  changelog: (q: ChangelogQuery) =>
     NdcClient.get<SemanticAssetChangelogPage>('/semantic-assets/changelog', {
-      query: { offset: opts.offset, limit: opts.limit },
+      query: {
+        iri: q.iri,
+        changeKind: q.changeKind,
+        since: q.since,
+        until: q.until,
+        offset: q.offset,
+        limit: q.limit,
+      },
     }),
 }

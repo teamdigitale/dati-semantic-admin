@@ -23,9 +23,10 @@ export function useLatestDeltaSummary(repositoryId: string | undefined) {
   })
 }
 
-export function useChangelog(offset = 0, limit = 20) {
+export function useChangelog(iri: string | undefined, offset = 0, limit = 20) {
   return useQuery({
-    queryKey: queryKeys.changelog(offset, limit),
-    queryFn: () => SemanticAssetsService.changelog({ offset, limit }),
+    queryKey: queryKeys.changelog(iri ?? '', offset, limit),
+    queryFn: () => SemanticAssetsService.changelog({ iri: iri!, offset, limit }),
+    enabled: !!iri,
   })
 }

@@ -1,21 +1,23 @@
 import { useState } from 'react'
-import { Card, CardBody, CardTitle, Icon, Input, Row, Col } from 'design-react-kit'
+import { Button, Card, CardBody, CardTitle, Icon, Input, Row, Col } from 'design-react-kit'
 import { useRepositories } from '../hooks/useRepositories'
 import { useChangelog, useLatestDelta, useLatestDeltaSummary } from '../hooks/useAudit'
 
 export default function AuditPage() {
   const repos = useRepositories()
   const [selectedRepoId, setSelectedRepoId] = useState<string>('')
+  const [iriInput, setIriInput] = useState<string>('')
+  const [activeIri, setActiveIri] = useState<string>('')
 
   const summary = useLatestDeltaSummary(selectedRepoId || undefined)
   const delta = useLatestDelta(selectedRepoId || undefined, { limit: 20 })
-  const changelog = useChangelog(0, 20)
+  const changelog = useChangelog(activeIri || undefined, 0, 20)
 
   return (
     <section>
       <h1 className="mb-1">Audit</h1>
       <p className="text-secondary mb-4">
-        Delta semantico tra i run e changelog cross-repository.
+        Delta semantico per repository (ultimo run) e changelog per singolo asset (cross-repo).
       </p>
 
       {/* --- Delta per repository (ultimo run) --- */}
@@ -99,46 +101,99 @@ export default function AuditPage() {
         </CardBody>
       </Card>
 
-      {/* --- Changelog globale --- */}
+      {/* --- Changelog per singolo asset --- */}
       <Card className="shadow-sm">
         <CardBody>
           <CardTitle tag="h5" className="d-flex align-items-center gap-2">
             <Icon icon="it-history" size="sm" />
-            Changelog asset semantici (cross-repository)
+            Changelog per asset (cross-repository)
           </CardTitle>
           <p className="text-secondary small mb-3">
-            Da <code>/semantic-assets/changelog</code>.
+            Time-series dei cambi a un singolo asset semantico, identificato per IRI. Da{' '}
+            <code>/semantic-assets/changelog?iri=...</code>.
           </p>
-          {changelog.isLoading && <p>Caricamento…</p>}
-          {changelog.isError && (
-            <p className="text-danger mb-0">Errore nel recupero del changelog.</p>
+
+          <Row className="g-2 align-items-end mb-3">
+            <Col md={9}>
+              <Input
+                type="text"
+                label="Asset IRI"
+                id="iri-input"
+                value={iriInput}
+                onChange={(e) => setIriInput(e.target.value)}
+                placeholder="https://w3id.org/italia/onto/..."
+              />
+            </Col>
+            <Col md={3}>
+              <Button
+                color="primary"
+                outline
+                disabled={!iriInput.trim()}
+                onClick={() => setActiveIri(iriInput.trim())}
+              >
+                <Icon icon="it-search" size="sm" className="me-2" />
+                Carica changelog
+              </Button>
+            </Col>
+          </Row>
+
+          {!activeIri && (
+            <p className="text-secondary small mb-0">
+              Inserisci un IRI e premi "Carica changelog".
+            </p>
           )}
-          {changelog.data && changelog.data.content.length === 0 && (
-            <p className="text-secondary mb-0">Nessuna voce registrata.</p>
+          {activeIri && changelog.isLoading && <p>Caricamento…</p>}
+          {activeIri && changelog.isError && (
+            <p className="text-danger mb-0">
+              Errore nel recupero del changelog: {(changelog.error as Error)?.message}
+            </p>
           )}
-          {changelog.data && changelog.data.content.length > 0 && (
-            <div className="table-responsive">
-              <table className="table table-hover table-sm mb-0">
-                <thead>
-                  <tr>
-                    <th>Asset IRI</th>
-                    <th>Cambio</th>
-                    <th>Quando</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {changelog.data.content.map((entry, i) => (
-                    <tr key={entry.assetIri + i}>
-                      <td className="text-truncate" style={{ maxWidth: 360 }}>
-                        <code>{entry.assetIri}</code>
-                      </td>
-                      <td>{entry.changeKind}</td>
-                      <td className="small">{new Date(entry.occurredAt).toLocaleString('it-IT')}</td>
+          {activeIri && changelog.data && changelog.data.content.length === 0 && (
+            <p className="text-secondary mb-0">Nessuna voce per l'IRI specificato.</p>
+          )}
+          {activeIri && changelog.data && changelog.data.content.length > 0 && (
+            <>
+              <p className="small mb-2">
+                Asset: <code>{changelog.data.assetIri}</code>
+                {changelog.data.assetType && (
+                  <>
+                    {' '}— tipo <strong>{changelog.data.assetType}</strong>
+                  </>
+                )}{' '}— <strong>{changelog.data.total}</strong> voci totali
+              </p>
+              <div className="table-responsive">
+                <table className="table table-hover table-sm mb-0">
+                  <thead>
+                    <tr>
+                      <th>Repository</th>
+                      <th>Revisione</th>
+                      <th>Cambio</th>
+                      <th>Run</th>
+                      <th>Quando</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {changelog.data.content.map((entry) => (
+                      <tr key={entry.runId + entry.createdAt}>
+                        <td>{entry.repositoryId}</td>
+                        <td>
+                          <code>{entry.revision ?? '—'}</code>
+                        </td>
+                        <td>
+                          <span className="badge bg-info">{entry.changeKind}</span>
+                        </td>
+                        <td className="text-truncate" style={{ maxWidth: 180 }}>
+                          <code>{entry.runId}</code>
+                        </td>
+                        <td className="small">
+                          {new Date(entry.createdAt).toLocaleString('it-IT')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardBody>
       </Card>

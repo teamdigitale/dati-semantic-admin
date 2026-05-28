@@ -13,7 +13,7 @@ export function useRepoConfig(repoId: string | undefined) {
 export function useUpdateConfigKey(repoId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ key, value }: { key: string; value: unknown }) =>
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
       ConfigService.updateKey(repoId, key, value),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.repositoryConfig(repoId) }),
   })
