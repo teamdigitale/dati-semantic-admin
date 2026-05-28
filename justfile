@@ -14,8 +14,33 @@ kc-up:
     @until curl -sf http://localhost:8082/realms/ndc/.well-known/openid-configuration -o /dev/null 2>/dev/null; do sleep 1; done
     @echo "Keycloak ready"
 
-# Pipeline completa: Keycloak su + build + bootRun dell'app
-run: kc-up build
+# Pipeline completa: avvia Keycloak e build in parallelo, poi bootRun.
+# Sfrutta la build cache Gradle (org.gradle.caching=true) e l'inputs/outputs
+# del task npmBuild per saltare lavori già fatti.
+run:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    docker compose up -d keycloak
+
+    echo "[parallel] gradle build + attesa Keycloak ready"
+
+    ./gradlew --quiet build &
+    BUILD_PID=$!
+
+    (
+      until curl -sf http://localhost:8082/realms/ndc/.well-known/openid-configuration -o /dev/null 2>/dev/null; do
+        sleep 1
+      done
+      echo "[keycloak] ready"
+    ) &
+    WAIT_PID=$!
+
+    # Aspetta entrambi; se uno fallisce, fa fail tutto.
+    wait $BUILD_PID || { echo "[build] FAILED"; kill $WAIT_PID 2>/dev/null || true; exit 1; }
+    echo "[build] done"
+    wait $WAIT_PID
+
     SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 
 # Stop Keycloak locale
