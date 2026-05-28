@@ -58,14 +58,10 @@ test:
     ./gradlew test
 
 # Lint completo (FE + BE)
-lint:
-    cd frontend && npm run lint
-    ./gradlew spotlessCheck
+lint: fe-lint be-lint
 
 # Format completo (FE + BE) - applica modifiche
-format:
-    cd frontend && npm run format
-    ./gradlew spotlessApply
+format: fe-format be-format
 
 # Lint solo frontend
 fe-lint:
@@ -75,13 +71,13 @@ fe-lint:
 be-lint:
     ./gradlew spotlessCheck
 
-# Format solo backend
-be-format:
-    ./gradlew spotlessApply
-
 # Format solo frontend
 fe-format:
     cd frontend && npm run format
+
+# Format solo backend
+be-format:
+    ./gradlew spotlessApply
 
 # --- Container ---
 
