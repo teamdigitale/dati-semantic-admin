@@ -4,11 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,6 +21,10 @@ import reactor.core.publisher.Mono;
  * Tutte le request a /bff/api/** (tranne /bff/api/me) vengono inoltrate al BE,
  * preservando method, path (dopo /bff/api), query string, body e content-type.
  * Il bearer JWT viene aggiunto automaticamente dal WebClient OAuth2-aware.
+ *
+ * Body request e response sono trasferiti in streaming via Flux<DataBuffer>
+ * per evitare di caricare in memoria upload o response di grandi dimensioni
+ * (utile per /validate/syntax con file RDF o per /harvest/vocabularies.db).
  */
 @RestController
 @RequestMapping("/bff/api")
@@ -25,6 +32,7 @@ import reactor.core.publisher.Mono;
 public class ProxyController {
 
     private static final String PREFIX = "/bff/api";
+    private static final DefaultDataBufferFactory BUFFER_FACTORY = new DefaultDataBufferFactory();
 
     private final WebClient backendWebClient;
 
@@ -36,19 +44,22 @@ public class ProxyController {
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
-        WebClient.RequestBodySpec spec =
-                backendWebClient.method(method).uri(uri).headers(headers -> copyForwardableHeaders(request, headers));
+        WebClient.RequestBodySpec spec = backendWebClient
+                .method(method)
+                .uri(uri)
+                .headers(headers -> copyForwardableHeaders(request, headers));
 
         if (method == HttpMethod.GET || method == HttpMethod.DELETE || method == HttpMethod.HEAD) {
             return spec.exchangeToMono(this::toResponseEntity);
         }
 
-        try {
-            byte[] body = request.getInputStream().readAllBytes();
-            return spec.bodyValue(body).exchangeToMono(this::toResponseEntity);
-        } catch (Exception e) {
-            return Mono.error(e);
-        }
+        // Streaming del body request: legge l'InputStream del servlet come Flux<DataBuffer>
+        // senza materializzare l'intero payload in un byte[].
+        Flux<DataBuffer> bodyFlux = DataBufferUtils.readInputStream(
+                request::getInputStream, BUFFER_FACTORY, 8192);
+
+        return spec.body(BodyInserters.fromDataBuffers(bodyFlux))
+                .exchangeToMono(this::toResponseEntity);
     }
 
     private void copyForwardableHeaders(HttpServletRequest request, HttpHeaders headers) {
