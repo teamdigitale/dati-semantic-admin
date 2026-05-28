@@ -7,9 +7,16 @@ default:
 
 # --- Sviluppo ---
 
-# Avvia Keycloak locale (in background)
+# Avvia Keycloak locale (in background) e attende che sia ready
 kc-up:
     docker compose up -d keycloak
+    @echo "Attendo Keycloak su http://localhost:8082..."
+    @until curl -sf http://localhost:8082/realms/ndc/.well-known/openid-configuration -o /dev/null 2>/dev/null; do sleep 1; done
+    @echo "Keycloak ready"
+
+# Pipeline completa: Keycloak su + build + bootRun dell'app
+run: kc-up build
+    SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 
 # Stop Keycloak locale
 kc-down:
