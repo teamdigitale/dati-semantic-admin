@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
@@ -21,7 +22,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, OAuth2AuthorizationRequestResolver pkceResolver)
+    SecurityFilterChain filterChain(
+            HttpSecurity http, OAuth2AuthorizationRequestResolver pkceResolver, OidcUserService oidcUserService)
             throws Exception {
         // CSRF abilitato (l'app e' session-based con cookie JSESSIONID).
         // Pattern double-submit cookie: il token viaggia nel cookie XSRF-TOKEN (leggibile da JS
@@ -45,8 +47,8 @@ public class SecurityConfig {
                 // Per richieste API non autenticate ritorna 401 invece di redirect HTML al login.
                 .exceptionHandling(eh -> eh.defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), apiMatcher()))
-                .oauth2Login(
-                        oauth2 -> oauth2.authorizationEndpoint(ae -> ae.authorizationRequestResolver(pkceResolver)))
+                .oauth2Login(oauth2 -> oauth2.authorizationEndpoint(ae -> ae.authorizationRequestResolver(pkceResolver))
+                        .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService)))
                 .logout(logout -> logout.logoutSuccessUrl("/").permitAll())
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfRepo).csrfTokenRequestHandler(csrfHandler));
 

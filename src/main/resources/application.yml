@@ -9,7 +9,7 @@ spring:
             client-id: ${OAUTH2_CLIENT_ID:ndc-admin-bff-client}
             client-secret: ${OAUTH2_CLIENT_SECRET:}
             authorization-grant-type: authorization_code
-            scope: openid,profile,email,ndc:admin,ndc:viewer
+            scope: openid,profile,email,roles
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           keycloak:

@@ -24,7 +24,11 @@ public class MeController {
                 user.getFullName() != null ? user.getFullName() : user.getPreferredUsername(),
                 "email",
                 user.getEmail() != null ? user.getEmail() : "",
-                "scopes",
-                user.getAuthorities().stream().map(Object::toString).toList());
+                "roles",
+                user.getAuthorities().stream()
+                        .map(Object::toString)
+                        .filter(a -> a.startsWith("ROLE_"))
+                        .map(a -> a.substring("ROLE_".length()))
+                        .toList());
     }
 }

@@ -75,31 +75,28 @@
       ]
     },
     {
-      "name": "ndc:admin",
-      "description": "Scope per le manovre amministrative del pannello",
+      "name": "roles",
+      "description": "OpenID Connect scope: include i realm roles dell'utente nel claim realm_access.roles",
       "protocol": "openid-connect",
       "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "false"
-      }
-    },
-    {
-      "name": "ndc:viewer",
-      "description": "Scope per la sola lettura nel pannello",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "false"
-      }
-    },
-    {
-      "name": "ndc:service",
-      "description": "Scope per identita di servizio (cron / scheduler)",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "false"
-      }
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "userinfo.token.claim": "true",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     }
   ],
   "clients": [
@@ -125,10 +122,9 @@
       "defaultClientScopes": [
         "profile",
         "email",
-        "ndc:admin",
-        "ndc:viewer"
+        "roles"
       ],
-      "optionalClientScopes": ["ndc:service"]
+      "optionalClientScopes": []
     },
     {
       "clientId": "ndc-cron-service-client",
