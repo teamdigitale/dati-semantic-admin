@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react'
-import { NavLink as RouterNavLink } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 import {
+  Button,
   Container,
   Header,
   HeaderBrand,
@@ -32,20 +33,35 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const me = useMe()
+  const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  // Chiude la sidebar mobile dopo una navigazione.
+  const close = () => setOpen(false)
 
   return (
     <>
       <Headers>
         <Header type="center" theme="">
           <HeaderContent>
-            <HeaderBrand iconName="it-pa">
-              <h2>NDC Admin</h2>
-              <h3>National Data Catalog</h3>
-            </HeaderBrand>
+            <div className="d-flex align-items-center">
+              <Button
+                color="link"
+                className="d-md-none p-1 me-2 text-white"
+                aria-label={open ? 'Chiudi menu' : 'Apri menu'}
+                onClick={() => setOpen((o) => !o)}
+              >
+                <Icon icon={open ? 'it-close' : 'it-burger'} color="white" size="lg" />
+              </Button>
+              <HeaderBrand iconName="it-pa">
+                <h2>NDC Admin</h2>
+                <h3>National Data Catalog</h3>
+              </HeaderBrand>
+            </div>
             <HeaderRightZone>
               <div className="d-flex align-items-center gap-3 me-3 text-white">
                 {me.data && (
-                  <span>
+                  <span className="d-none d-sm-inline">
                     <Icon icon="it-user" size="sm" className="me-2" color="white" />
                     {me.data.name}
                   </span>
@@ -62,23 +78,31 @@ export function AppLayout({ children }: AppLayoutProps) {
       <Container fluid className="px-0">
         <div className="row g-0">
           <aside
-            className="col-12 col-md-3 col-lg-2 border-end bg-light"
+            className={`col-12 col-md-3 col-lg-2 border-end bg-light ${
+              open ? 'd-block' : 'd-none d-md-block'
+            }`}
             style={{ minHeight: 'calc(100vh - 120px)' }}
           >
             <Sidebar>
               <div className="link-list-wrapper">
                 <ul className="link-list">
-                  {NAV.map((entry) => (
-                    <li key={entry.to}>
-                      <RouterNavLink
-                        to={entry.to}
-                        className={({ isActive }) => `list-item${isActive ? ' active' : ''}`}
-                      >
-                        <Icon icon={entry.iconName} size="sm" className="me-2" />
-                        <span>{entry.label}</span>
-                      </RouterNavLink>
-                    </li>
-                  ))}
+                  {NAV.map((entry) => {
+                    const active =
+                      location.pathname === entry.to ||
+                      location.pathname.startsWith(entry.to + '/')
+                    return (
+                      <li key={entry.to}>
+                        <RouterNavLink
+                          to={entry.to}
+                          onClick={close}
+                          className={`list-item${active ? ' active' : ''}`}
+                        >
+                          <Icon icon={entry.iconName} size="sm" className="me-2" />
+                          <span>{entry.label}</span>
+                        </RouterNavLink>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             </Sidebar>
