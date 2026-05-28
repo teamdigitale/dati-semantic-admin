@@ -38,14 +38,28 @@ function buildQuery(query?: RequestOptions['query']): string {
   return s ? `?${s}` : ''
 }
 
+function readCookie(name: string): string | undefined {
+  const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'))
+  return match ? decodeURIComponent(match[2]) : undefined
+}
+
+function isCsrfMethod(method: string): boolean {
+  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && method !== 'TRACE'
+}
+
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
+  const method = opts.method ?? 'GET'
   const url = `/bff/api${path}${buildQuery(opts.query)}`
+
+  const csrfToken = isCsrfMethod(method) ? readCookie('XSRF-TOKEN') : undefined
+
   const init: RequestInit = {
-    method: opts.method ?? 'GET',
+    method,
     credentials: 'include',
     headers: {
       Accept: 'application/json',
       ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
       ...(opts.headers ?? {}),
     },
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,

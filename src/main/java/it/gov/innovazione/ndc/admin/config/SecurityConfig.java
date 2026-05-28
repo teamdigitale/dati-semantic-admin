@@ -11,6 +11,8 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -21,6 +23,13 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http, OAuth2AuthorizationRequestResolver pkceResolver)
             throws Exception {
+        // CSRF abilitato (l'app e' session-based con cookie JSESSIONID).
+        // Pattern double-submit cookie: il token viaggia nel cookie XSRF-TOKEN (leggibile da JS
+        // perche' same-origin) e il client lo rispedisce nell'header X-XSRF-TOKEN.
+        CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
+        csrfHandler.setCsrfRequestAttributeName(null); // disabilita la deferred resolution
+
         http.authorizeHttpRequests(req -> req.requestMatchers(
                                 "/",
                                 "/index.html",
@@ -33,14 +42,13 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                // Per richieste API non autenticate ritorna 401 invece di redirect HTML.
+                // Per richieste API non autenticate ritorna 401 invece di redirect HTML al login.
                 .exceptionHandling(eh -> eh.defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), apiMatcher()))
                 .oauth2Login(
                         oauth2 -> oauth2.authorizationEndpoint(ae -> ae.authorizationRequestResolver(pkceResolver)))
                 .logout(logout -> logout.logoutSuccessUrl("/").permitAll())
-                // Pannello stateless con SameSite=Lax + bearer header verso BE → CSRF non necessario.
-                .csrf(csrf -> csrf.disable());
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfRepo).csrfTokenRequestHandler(csrfHandler));
 
         return http.build();
     }

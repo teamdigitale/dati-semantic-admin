@@ -44,10 +44,8 @@ public class ProxyController {
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
-        WebClient.RequestBodySpec spec = backendWebClient
-                .method(method)
-                .uri(uri)
-                .headers(headers -> copyForwardableHeaders(request, headers));
+        WebClient.RequestBodySpec spec =
+                backendWebClient.method(method).uri(uri).headers(headers -> copyForwardableHeaders(request, headers));
 
         if (method == HttpMethod.GET || method == HttpMethod.DELETE || method == HttpMethod.HEAD) {
             return spec.exchangeToMono(this::toResponseEntity);
@@ -55,11 +53,9 @@ public class ProxyController {
 
         // Streaming del body request: legge l'InputStream del servlet come Flux<DataBuffer>
         // senza materializzare l'intero payload in un byte[].
-        Flux<DataBuffer> bodyFlux = DataBufferUtils.readInputStream(
-                request::getInputStream, BUFFER_FACTORY, 8192);
+        Flux<DataBuffer> bodyFlux = DataBufferUtils.readInputStream(request::getInputStream, BUFFER_FACTORY, 8192);
 
-        return spec.body(BodyInserters.fromDataBuffers(bodyFlux))
-                .exchangeToMono(this::toResponseEntity);
+        return spec.body(BodyInserters.fromDataBuffers(bodyFlux)).exchangeToMono(this::toResponseEntity);
     }
 
     private void copyForwardableHeaders(HttpServletRequest request, HttpHeaders headers) {
