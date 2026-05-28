@@ -47,7 +47,9 @@ export default function RepositoriesPage() {
                           {r.url}
                         </a>
                       </td>
-                      <td><code>{r.branch ?? 'main'}</code></td>
+                      <td>
+                        <code>{r.branch ?? 'main'}</code>
+                      </td>
                       <td className="text-end">
                         <Button
                           size="xs"

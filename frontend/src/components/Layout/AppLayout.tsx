@@ -72,9 +72,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <li key={entry.to}>
                       <RouterNavLink
                         to={entry.to}
-                        className={({ isActive }) =>
-                          `list-item${isActive ? ' active' : ''}`
-                        }
+                        className={({ isActive }) => `list-item${isActive ? ' active' : ''}`}
                       >
                         <Icon icon={entry.iconName} size="sm" className="me-2" />
                         <span>{entry.label}</span>

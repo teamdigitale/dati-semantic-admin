@@ -1,9 +1,5 @@
 import { NdcClient } from '../api/NdcClient'
-import type {
-  HarvesterRun,
-  JobExecutionResponse,
-  RunningInstance,
-} from '../api/types/harvest'
+import type { HarvesterRun, JobExecutionResponse, RunningInstance } from '../api/types/harvest'
 
 export const HarvestService = {
   startAll: (force = false) =>
@@ -18,8 +14,7 @@ export const HarvestService = {
 
   listRunning: () => NdcClient.get<RunningInstance[]>('/jobs/harvest/running'),
 
-  cancelPending: () =>
-    NdcClient.delete<void>('/jobs/harvest/run', { responseType: 'void' }),
+  cancelPending: () => NdcClient.delete<void>('/jobs/harvest/run', { responseType: 'void' }),
 
   clearRepo: (repoUrl: string) =>
     NdcClient.post<void>('/jobs/clear', undefined, {

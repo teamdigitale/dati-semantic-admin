@@ -94,9 +94,7 @@ export default function HarvestPage() {
                       </td>
                       <td>{r.status}</td>
                       <td>{new Date(r.startedAt).toLocaleString('it-IT')}</td>
-                      <td>
-                        {r.endedAt ? new Date(r.endedAt).toLocaleString('it-IT') : '—'}
-                      </td>
+                      <td>{r.endedAt ? new Date(r.endedAt).toLocaleString('it-IT') : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

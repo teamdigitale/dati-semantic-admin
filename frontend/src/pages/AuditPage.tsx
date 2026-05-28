@@ -14,8 +14,8 @@ export default function AuditPage() {
             <Icon icon="it-info-circle" size="sm" className="mt-1" />
             <div>
               <strong>In sviluppo.</strong> La vista audit verra' collegata agli endpoint{' '}
-              <code>/config/repository/&#123;id&#125;/runs/.../delta</code> non appena avremo
-              dati nei repository di test.
+              <code>/config/repository/&#123;id&#125;/runs/.../delta</code> non appena avremo dati
+              nei repository di test.
             </div>
           </div>
         </CardBody>

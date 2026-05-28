@@ -37,8 +37,7 @@ export default function DashboardPage() {
   const totalRepos = repos.data?.length ?? 0
   const totalRuns = runs.data?.length ?? 0
   const inProgress = running.data?.length ?? 0
-  const failedRuns =
-    runs.data?.filter((r) => r.status === 'FAILURE').length ?? 0
+  const failedRuns = runs.data?.filter((r) => r.status === 'FAILURE').length ?? 0
 
   return (
     <section>
@@ -47,16 +46,36 @@ export default function DashboardPage() {
 
       <Row className="g-3 mb-4">
         <Col md={6} lg={3}>
-          <StatCard title="Repository censiti" value={totalRepos} iconName="it-folder" loading={repos.isLoading} />
+          <StatCard
+            title="Repository censiti"
+            value={totalRepos}
+            iconName="it-folder"
+            loading={repos.isLoading}
+          />
         </Col>
         <Col md={6} lg={3}>
-          <StatCard title="Run totali" value={totalRuns} iconName="it-files" loading={runs.isLoading} />
+          <StatCard
+            title="Run totali"
+            value={totalRuns}
+            iconName="it-files"
+            loading={runs.isLoading}
+          />
         </Col>
         <Col md={6} lg={3}>
-          <StatCard title="In esecuzione" value={inProgress} iconName="it-refresh" loading={running.isLoading} />
+          <StatCard
+            title="In esecuzione"
+            value={inProgress}
+            iconName="it-refresh"
+            loading={running.isLoading}
+          />
         </Col>
         <Col md={6} lg={3}>
-          <StatCard title="Run falliti" value={failedRuns} iconName="it-close-circle" loading={runs.isLoading} />
+          <StatCard
+            title="Run falliti"
+            value={failedRuns}
+            iconName="it-close-circle"
+            loading={runs.isLoading}
+          />
         </Col>
       </Row>
 
@@ -85,7 +104,9 @@ export default function DashboardPage() {
                       <td className="text-truncate" style={{ maxWidth: 280 }}>
                         {r.repositoryUrl ?? r.repositoryId}
                       </td>
-                      <td><code>{r.revision ?? '-'}</code></td>
+                      <td>
+                        <code>{r.revision ?? '-'}</code>
+                      </td>
                       <td>
                         <span className={`badge ${statusBadge(r.status)}`}>{r.status}</span>
                       </td>
