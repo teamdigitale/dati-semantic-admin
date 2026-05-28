@@ -137,7 +137,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
       "attributes": {},
-      "defaultClientScopes": ["ndc:service"],
+      "defaultClientScopes": ["roles"],
       "optionalClientScopes": []
     }
   ],
@@ -165,6 +165,12 @@
         { "type": "password", "value": "password", "temporary": false }
       ],
       "realmRoles": ["ndc-viewer"]
+    },
+    {
+      "username": "service-account-ndc-cron-service-client",
+      "enabled": true,
+      "serviceAccountClientId": "ndc-cron-service-client",
+      "realmRoles": ["ndc-service"]
     }
   ]
 }

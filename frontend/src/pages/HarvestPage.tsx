@@ -5,12 +5,14 @@ import {
   useRunningInstances,
   useStartHarvestAll,
 } from '../hooks/useHarvest'
+import { useIsAdmin } from '../hooks/useHasRole'
 
 export default function HarvestPage() {
   const runs = useHarvestRuns()
   const running = useRunningInstances()
   const startAll = useStartHarvestAll()
   const cancelAll = useCancelPendingHarvests()
+  const isAdmin = useIsAdmin()
 
   return (
     <section>
@@ -19,27 +21,29 @@ export default function HarvestPage() {
           <h1 className="mb-1">Harvest</h1>
           <p className="text-secondary mb-0">Gestione dei job di harvesting.</p>
         </div>
-        <div className="d-flex gap-2">
-          <Button
-            color="primary"
-            onClick={() => startAll.mutate(false)}
-            disabled={startAll.isPending}
-          >
-            <Icon icon="it-refresh" size="sm" color="white" className="me-2" />
-            Avvia tutto
-          </Button>
-          <Button
-            color="danger"
-            outline
-            onClick={() => {
-              if (confirm('Cancellare tutti i job pending?')) cancelAll.mutate()
-            }}
-            disabled={cancelAll.isPending}
-          >
-            <Icon icon="it-close-circle" size="sm" className="me-2" />
-            Cancella pending
-          </Button>
-        </div>
+        {isAdmin && (
+          <div className="d-flex gap-2">
+            <Button
+              color="primary"
+              onClick={() => startAll.mutate(false)}
+              disabled={startAll.isPending}
+            >
+              <Icon icon="it-refresh" size="sm" color="white" className="me-2" />
+              Avvia tutto
+            </Button>
+            <Button
+              color="danger"
+              outline
+              onClick={() => {
+                if (confirm('Cancellare tutti i job pending?')) cancelAll.mutate()
+              }}
+              disabled={cancelAll.isPending}
+            >
+              <Icon icon="it-close-circle" size="sm" className="me-2" />
+              Cancella pending
+            </Button>
+          </div>
+        )}
       </div>
 
       <Row className="g-3 mb-4">
@@ -54,10 +58,12 @@ export default function HarvestPage() {
               {running.data && running.data.length > 0 && (
                 <ul className="list-unstyled mb-0">
                   {running.data.map((r) => (
-                    <li key={r.runId} className="border-bottom py-2">
-                      <code>{r.runId}</code> — {r.repositoryId}
+                    <li key={r.harvesterRun.id} className="border-bottom py-2">
+                      <code>{r.harvesterRun.id}</code> —{' '}
+                      {r.harvesterRun.repositoryUrl ?? r.harvesterRun.repositoryId}
                       <div className="text-secondary small">
-                        iniziato {new Date(r.startedAt).toLocaleString('it-IT')}
+                        thread <code>{r.threadName}</code> · iniziato{' '}
+                        {new Date(r.harvesterRun.startedAt).toLocaleString('it-IT')}
                       </div>
                     </li>
                   ))}

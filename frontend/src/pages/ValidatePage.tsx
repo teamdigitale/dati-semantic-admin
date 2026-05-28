@@ -72,7 +72,7 @@ export default function ValidatePage() {
           )}
           {submit.data && (
             <div className="alert alert-success mt-3 mb-0">
-              Job avviato. ID: <code>{submit.data.id}</code> — stato:{' '}
+              Job avviato. ID: <code>{submit.data.validationId}</code> — stato:{' '}
               <strong>{submit.data.status}</strong>
             </div>
           )}

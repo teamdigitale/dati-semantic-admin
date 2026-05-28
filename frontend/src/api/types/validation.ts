@@ -1,29 +1,45 @@
-export type ValidationJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | string
+export type ValidationJobStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
 
 export interface ValidationJobSubmitted {
-  id: string
-  owner: string
-  repo: string
-  revision?: string
+  validationId: string
   status: ValidationJobStatus
-  createdAt: string
+  repoUrl?: string
+  revision?: string
+  submittedAt: string
+}
+
+export interface ValidationProgress {
+  step?: string
+  percentage?: number
+  message?: string
+}
+
+export interface ValidationReport {
+  // forma effettiva del report harvester (campi opzionali, dettagliati lato BE)
+  [key: string]: unknown
+}
+
+export interface ValidationJobStatusDto {
+  validationId: string
+  status: ValidationJobStatus
+  owner?: string
+  repo?: string
+  revision?: string
+  repoUrl?: string
+  submittedAt: string
+  completedAt?: string
+  progress?: ValidationProgress
+  report?: ValidationReport
+  errorMessage?: string
 }
 
 export interface RdfSyntaxValidationResult {
   valid: boolean
   errors?: string[]
   warnings?: string[]
-}
-
-export interface ValidationJobStatusDto {
-  id: string
-  owner: string
-  repo: string
-  revision?: string
-  status: ValidationJobStatus
-  createdAt: string
-  startedAt?: string
-  endedAt?: string
-  result?: unknown
-  error?: string
 }

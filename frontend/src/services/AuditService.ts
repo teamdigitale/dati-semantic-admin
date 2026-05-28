@@ -2,19 +2,19 @@ import { NdcClient } from '../api/NdcClient'
 import type { ResourceDeltaPage, ResourceDeltaSummary } from '../api/types/audit'
 
 interface DeltaQuery {
-  page?: number
-  size?: number
+  offset?: number
+  limit?: number
 }
 
 export const AuditService = {
   runDelta: (repositoryId: string, runId: string, q: DeltaQuery = {}) =>
     NdcClient.get<ResourceDeltaPage>(`/config/repository/${repositoryId}/runs/${runId}/delta`, {
-      query: { page: q.page, size: q.size },
+      query: { offset: q.offset, limit: q.limit },
     }),
 
   latestDelta: (repositoryId: string, q: DeltaQuery = {}) =>
     NdcClient.get<ResourceDeltaPage>(`/config/repository/${repositoryId}/runs/latest/delta`, {
-      query: { page: q.page, size: q.size },
+      query: { offset: q.offset, limit: q.limit },
     }),
 
   runDeltaSummary: (repositoryId: string, runId: string) =>

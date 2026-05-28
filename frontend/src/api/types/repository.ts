@@ -4,8 +4,12 @@ export interface Repository {
   branch?: string
   name?: string
   description?: string
-  maxFileSizeBytes?: number
+  owner?: string
   active?: boolean
+  createdAt?: string
+  createdBy?: string
+  updatedAt?: string
+  updatedBy?: string
 }
 
 export interface CreateRepositoryRequest {

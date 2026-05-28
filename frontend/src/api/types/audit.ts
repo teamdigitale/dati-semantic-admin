@@ -1,31 +1,42 @@
-export type ChangeKind = 'ADDED' | 'REMOVED' | 'MODIFIED' | string
-export type SemanticAssetType = 'ONTOLOGY' | 'CONTROLLED_VOCABULARY' | 'SCHEMA' | string
+import type { HarvesterRunStatus } from './harvest'
 
-export interface ResourceDeltaEntry {
-  iri: string
-  changeKind: ChangeKind
+export type ChangeKind = 'CREATED' | 'UPDATED' | 'DELETED' | string
+export type SemanticAssetType =
+  | 'ONTOLOGY'
+  | 'CONTROLLED_VOCABULARY'
+  | 'SCHEMA'
+  | string
+
+export interface RunInfo {
+  id: string
+  repositoryId: string
+  revision?: string
+  revisionCommittedAt?: string
+  startedAt: string
+  endedAt?: string
+  status: HarvesterRunStatus
+}
+
+export interface ResourceDeltaItem {
+  assetIri: string
   assetType: SemanticAssetType
-  rightHolder?: string
-  title?: string
+  changeKind: ChangeKind
+  summary?: unknown
+  createdAt: string
+  harvesterRunId: string
 }
 
 export interface ResourceDeltaPage {
-  runId: string
-  startedAt: string
-  endedAt?: string
-  page: number
-  size: number
-  totalElements: number
-  totalPages: number
-  content: ResourceDeltaEntry[]
+  run: RunInfo
+  content: ResourceDeltaItem[]
+  offset: number
+  limit: number
+  total: number
 }
 
 export interface ResourceDeltaSummary {
-  runId: string
-  startedAt: string
-  endedAt?: string
-  crossTab: Record<SemanticAssetType, Record<ChangeKind, number>>
+  run: RunInfo
   byChangeKind: Record<ChangeKind, number>
   byAssetType: Record<SemanticAssetType, number>
-  total: number
+  crossTab: Record<SemanticAssetType, Record<ChangeKind, number>>
 }

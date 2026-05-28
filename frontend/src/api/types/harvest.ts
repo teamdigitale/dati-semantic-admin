@@ -1,31 +1,37 @@
 export type HarvesterRunStatus =
-  | 'PENDING'
-  | 'RUNNING'
   | 'SUCCESS'
+  | 'UNCHANGED'
+  | 'ALREADY_RUNNING'
+  | 'RUNNING'
+  | 'NDC_ISSUES_PRESENT'
   | 'FAILURE'
-  | 'CANCELLED'
-  | string
 
 export interface HarvesterRun {
   id: string
+  correlationId?: string
   repositoryId: string
   repositoryUrl?: string
-  revision?: string
+  instance?: string
   startedAt: string
+  startedBy?: string
   endedAt?: string
+  revision?: string
+  revisionCommittedAt?: string
   status: HarvesterRunStatus
+  reason?: string
   validationReport?: string
 }
 
 export interface RunningInstance {
-  runId: string
-  repositoryId: string
-  startedAt: string
+  threadName: string
+  harvesterRun: HarvesterRun
 }
 
 export interface JobExecutionResponse {
-  jobId?: string
+  runId: string
+  correlationId?: string
+  repositoryId: string
   repositoryUrl?: string
-  status?: string
-  message?: string
+  startedAt?: string
+  forced: boolean
 }
