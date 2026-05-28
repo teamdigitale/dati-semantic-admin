@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: dati-semantic-admin
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${OAUTH2_CLIENT_ID:ndc-admin-bff-client}
+            client-secret: ${OAUTH2_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email,ndc:admin,ndc:viewer
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            # issuer-uri NON definito qui di proposito.
+            # Va impostato per ambiente:
+            #   - locale: application-local.yml
+            #   - test:   application-test.yml (usa authorization/token/jwk-set-uri espliciti)
+            #   - prod:   variabile d'ambiente SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUERURI
+            user-name-attribute: preferred_username
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: false   # true in produzione (HTTPS)
+        same-site: lax
+      timeout: 30m
+
+ndc:
+  bff:
+    backend-url: ${NDC_BACKEND_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    org.springframework.security: INFO
+    it.gov.innovazione.ndc.admin: INFO

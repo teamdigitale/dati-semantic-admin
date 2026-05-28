@@ -1,0 +1,23 @@
+# Profilo locale (attivare con SPRING_PROFILES_ACTIVE=local)
+# Sovrascrive i default puntando a Keycloak/BE locali avviati via docker-compose.
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ndc-admin-bff-client
+            client-secret: local-development-secret
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8082/realms/ndc
+
+ndc:
+  bff:
+    backend-url: http://localhost:8081
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    it.gov.innovazione.ndc.admin: DEBUG

@@ -1,0 +1,63 @@
+# Gradle / Spring
+.gradle/
+build/
+out/
+*.class
+
+# IntelliJ / Eclipse / VSCode
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+
+# TypeScript build artifacts (composite mode)
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/**/*.tsbuildinfo
+
+# Generato dal task copyFrontendDist (artefatto di build, non sorgente)
+src/main/resources/static/
+
+# AI tooling — nessun file di assistenti AI deve essere committato
+.claude/
+.claude.local/
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.cursorignore
+.aider*
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v3
+.continue/
+.windsurfrules
+.windsurf/
+.codeium/
+.cody/
+.tabnine/
+.codegpt/
+.copilot/
+.github/copilot-instructions.md
+GEMINI.md
+.gemini/
+*.ai-context.md
+*.ai-notes.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Log
+*.log
