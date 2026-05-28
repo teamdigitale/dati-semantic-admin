@@ -9,6 +9,5 @@ import org.springframework.test.context.ActiveProfiles;
 class DatiSemanticAdminApplicationTests {
 
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 }

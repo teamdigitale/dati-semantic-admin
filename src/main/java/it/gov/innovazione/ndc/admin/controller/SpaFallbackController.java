@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class SpaFallbackController {
 
-    @GetMapping(value = {
-        "/{path:[^.]*}",                              // /repositories, /harvest, ecc.
-        "/{path:^(?!bff|actuator|oauth2|login|assets|static).*}/{sub:[^.]*}"
-    })
+    @GetMapping(
+            value = {
+                "/{path:[^.]*}", // /repositories, /harvest, ecc.
+                "/{path:^(?!bff|actuator|oauth2|login|assets|static).*}/{sub:[^.]*}"
+            })
     public String forwardToIndex() {
         return "forward:/index.html";
     }

@@ -11,21 +11,25 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json,md}\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.100.14",
+    "bootstrap-italia": "^2.18.1",
+    "design-react-kit": "^5.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.8.0",
-    "@typescript-eslint/parser": "^8.8.0",
     "@vitejs/plugin-react": "^4.3.2",
     "eslint": "^9.11.1",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.12",
+    "globals": "^17.6.0",
     "prettier": "^3.3.3",
     "typescript": "^5.6.2",
+    "typescript-eslint": "^8.60.0",
     "vite": "^5.4.8"
   }
 }

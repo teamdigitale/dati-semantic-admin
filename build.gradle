@@ -5,6 +5,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.14'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.github.node-gradle.node' version '7.0.2'
+    id 'com.diffplug.spotless' version '7.0.4'
 }
 
 group = 'it.gov.innovazione.ndc'
@@ -64,3 +65,22 @@ tasks.register('copyFrontendDist', Copy).configure {
 
 processResources.dependsOn 'copyFrontendDist'
 clean.delete "${project.projectDir}/src/main/resources/static"
+
+// --- Spotless: lint + format Java/yaml/md ---
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        targetExclude 'build/**'
+        palantirJavaFormat('2.50.0')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'misc', {
+        target '*.gradle', '*.md', '*.yml', '*.yaml', 'src/**/*.yml', 'src/**/*.yaml', 'src/**/*.md'
+        targetExclude 'build/**', 'frontend/node_modules/**', 'frontend/dist/**'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}

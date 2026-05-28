@@ -1,6 +1,7 @@
 package it.gov.innovazione.ndc.admin.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 
 /**
  * Reverse proxy verso il BE NDC.
@@ -37,10 +36,8 @@ public class ProxyController {
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
-        WebClient.RequestBodySpec spec = backendWebClient
-            .method(method)
-            .uri(uri)
-            .headers(headers -> copyForwardableHeaders(request, headers));
+        WebClient.RequestBodySpec spec =
+                backendWebClient.method(method).uri(uri).headers(headers -> copyForwardableHeaders(request, headers));
 
         if (method == HttpMethod.GET || method == HttpMethod.DELETE || method == HttpMethod.HEAD) {
             return spec.exchangeToMono(this::toResponseEntity);
@@ -61,9 +58,9 @@ public class ProxyController {
             // Authorization viene aggiunto dal filter OAuth2 del WebClient.
             // Host/Cookie/Content-Length non vanno propagati.
             if (name.equalsIgnoreCase(HttpHeaders.AUTHORIZATION)
-                || name.equalsIgnoreCase(HttpHeaders.HOST)
-                || name.equalsIgnoreCase(HttpHeaders.COOKIE)
-                || name.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
+                    || name.equalsIgnoreCase(HttpHeaders.HOST)
+                    || name.equalsIgnoreCase(HttpHeaders.COOKIE)
+                    || name.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
                 continue;
             }
             headers.add(name, request.getHeader(name));
@@ -72,9 +69,8 @@ public class ProxyController {
 
     private Mono<ResponseEntity<Flux<DataBuffer>>> toResponseEntity(
             org.springframework.web.reactive.function.client.ClientResponse clientResponse) {
-        return Mono.just(ResponseEntity
-            .status(clientResponse.statusCode())
-            .headers(clientResponse.headers().asHttpHeaders())
-            .body(clientResponse.bodyToFlux(DataBuffer.class)));
+        return Mono.just(ResponseEntity.status(clientResponse.statusCode())
+                .headers(clientResponse.headers().asHttpHeaders())
+                .body(clientResponse.bodyToFlux(DataBuffer.class)));
     }
 }
