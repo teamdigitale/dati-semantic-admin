@@ -342,6 +342,7 @@ interface RunGroup {
   endedAt: string | null
   hasRunning: boolean
   failedCount: number
+  issueCount: number
   outcome: BatchOutcome
 }
 
@@ -362,6 +363,7 @@ function groupRuns(runs: HarvesterRun[]): RunGroup[] {
     let maxEnd: string | null = runs[0].endedAt ?? null
     let hasRunning = false
     let failedCount = 0
+    let issueCount = 0
     for (const r of runs) {
       if (new Date(r.startedAt).getTime() < new Date(minStart).getTime()) minStart = r.startedAt
       if (!r.endedAt || r.status === 'RUNNING') {
@@ -370,11 +372,15 @@ function groupRuns(runs: HarvesterRun[]): RunGroup[] {
         maxEnd = r.endedAt
       }
       if (r.status === 'FAILURE') failedCount += 1
+      if (r.status === 'NDC_ISSUES_PRESENT') issueCount += 1
     }
+    // NDC_ISSUES_PRESENT non e' un FAILURE hard ma e' un warning: non va nascosto
+    // dal verde "Completato" del batch. Mappa: solo SUCCESS/UNCHANGED puri -> green;
+    // qualunque mix con failure parziali o NDC issues -> yellow; tutti FAILURE -> red.
     let outcome: BatchOutcome
     if (hasRunning) outcome = 'running'
     else if (failedCount === runs.length) outcome = 'red'
-    else if (failedCount > 0) outcome = 'yellow'
+    else if (failedCount > 0 || issueCount > 0) outcome = 'yellow'
     else outcome = 'green'
 
     groups.push({
@@ -384,6 +390,7 @@ function groupRuns(runs: HarvesterRun[]): RunGroup[] {
       endedAt: hasRunning ? null : maxEnd,
       hasRunning,
       failedCount,
+      issueCount,
       outcome,
     })
   }
@@ -443,7 +450,7 @@ function BatchRow({
 }
 
 function BatchOutcomeBadge({ group }: { group: RunGroup }) {
-  const { outcome, failedCount, runs } = group
+  const { outcome, failedCount, issueCount, runs } = group
   if (outcome === 'running') {
     return (
       <Badge color="info" pill className="text-uppercase" style={COMPACT_BADGE}>
@@ -461,10 +468,13 @@ function BatchOutcomeBadge({ group }: { group: RunGroup }) {
     )
   }
   if (outcome === 'yellow') {
+    const parts: string[] = []
+    if (failedCount > 0) parts.push(`${failedCount} failed`)
+    if (issueCount > 0) parts.push(`${issueCount} issue`)
     return (
       <Badge color="warning" pill className="text-uppercase" style={COMPACT_BADGE}>
         <Icon icon="it-warning-circle" size="xs" color="white" className="me-1" />
-        Parziale ({failedCount}/{runs.length} failed)
+        Parziale ({parts.join(', ')}/{runs.length})
       </Badge>
     )
   }
