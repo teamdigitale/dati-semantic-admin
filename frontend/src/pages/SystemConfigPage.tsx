@@ -18,8 +18,8 @@ export default function SystemConfigPage() {
         <div>
           <h1 className="admin-page-title">Configurazione di sistema</h1>
           <p className="admin-page-subtitle">
-            Chiavi NDC-wide. Le singole repository possono sovrascrivere alcuni di questi
-            valori (vedi dettaglio repository).
+            Chiavi NDC-wide. Le singole repository possono sovrascrivere alcuni di questi valori
+            (vedi dettaglio repository).
           </p>
         </div>
       </div>

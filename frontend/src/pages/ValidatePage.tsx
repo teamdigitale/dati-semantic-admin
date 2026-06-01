@@ -1,5 +1,16 @@
 import { useState } from 'react'
-import { Badge, Button, Card, CardBody, CardTitle, Icon, Input, Row, Col, Spinner } from 'design-react-kit'
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardTitle,
+  Icon,
+  Input,
+  Row,
+  Col,
+  Spinner,
+} from 'design-react-kit'
 import { useMutation } from '@tanstack/react-query'
 import { ValidationService } from '../services/ValidationService'
 import ValidationReportModal from '../components/ValidationReportModal'
@@ -120,7 +131,11 @@ function RepoCheckCard() {
             onClick={() => submit.mutate()}
           >
             <Icon icon="it-check-circle" size="sm" color="white" className="me-2" />
-            {submit.isPending ? 'Invio…' : terminal ? 'Avvia nuova validazione' : 'Avvia validazione'}
+            {submit.isPending
+              ? 'Invio…'
+              : terminal
+                ? 'Avvia nuova validazione'
+                : 'Avvia validazione'}
           </Button>
           {jobId && (
             <Button color="secondary" outline onClick={reset} disabled={!terminal}>
@@ -201,11 +216,7 @@ function JobProgressBox({
     color: 'secondary',
     label: effectiveStatus,
   }
-  const alertClass = terminal
-    ? hasReport
-      ? 'alert-success'
-      : 'alert-danger'
-    : 'alert-info'
+  const alertClass = terminal ? (hasReport ? 'alert-success' : 'alert-danger') : 'alert-info'
 
   return (
     <div className={`alert mt-3 mb-0 ${alertClass}`}>
@@ -230,9 +241,7 @@ function JobProgressBox({
         </p>
       )}
       {queryError !== null && queryError !== undefined && (
-        <p className="small mt-2 mb-0">
-          Errore polling: {errorMessageOf(queryError)}
-        </p>
+        <p className="small mt-2 mb-0">Errore polling: {errorMessageOf(queryError)}</p>
       )}
     </div>
   )

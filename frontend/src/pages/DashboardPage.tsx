@@ -184,10 +184,7 @@ function statusBadge(status: string): string {
  * Non e' un enum formale, e' logica hardcoded: lo trattiamo come stringa
  * opaca e stiliamo solo i valori noti, gli altri ricadono sul default.
  */
-const SEMANTIC_STATUS_STYLE: Record<
-  string,
-  { color: string; icon: string; pill?: boolean }
-> = {
+const SEMANTIC_STATUS_STYLE: Record<string, { color: string; icon: string; pill?: boolean }> = {
   Stabile: { color: 'success', icon: 'it-check-circle' },
   Bozza: { color: 'warning', icon: 'it-pencil' },
   Archiviato: { color: 'secondary', icon: 'it-folder' },
@@ -220,11 +217,15 @@ function SemanticStatusBadge({ status }: { status: string }) {
 function StatusDistributionList({ data }: { data: AggregateDashboardResponse }) {
   const dateIdx = data.headers.findIndex((h) => h.toUpperCase() === 'DATE')
   const statusIdx = data.headers.findIndex((h) => h.toUpperCase() === 'STATUS')
-  const countIdx = data.headers.findIndex(
-    (_, i) => i !== dateIdx && i !== statusIdx,
-  )
+  const countIdx = data.headers.findIndex((_, i) => i !== dateIdx && i !== statusIdx)
 
-  if (!data.rows || data.rows.length === 0 || dateIdx === -1 || statusIdx === -1 || countIdx === -1) {
+  if (
+    !data.rows ||
+    data.rows.length === 0 ||
+    dateIdx === -1 ||
+    statusIdx === -1 ||
+    countIdx === -1
+  ) {
     return <p className="small text-secondary mb-0">Nessun dato disponibile.</p>
   }
 
@@ -253,22 +254,14 @@ function StatusDistributionList({ data }: { data: AggregateDashboardResponse }) 
   return (
     <ul className="list-unstyled mb-0">
       {groups.map((g, idx) => (
-        <li
-          key={g.year}
-          className={`py-2 ${idx < groups.length - 1 ? 'border-bottom' : ''}`}
-        >
+        <li key={g.year} className={`py-2 ${idx < groups.length - 1 ? 'border-bottom' : ''}`}>
           <div className="d-flex justify-content-between align-items-baseline mb-1">
             <span className="fw-semibold">{g.year}</span>
-            <span className="small text-secondary">
-              {g.total.toLocaleString('it-IT')} totali
-            </span>
+            <span className="small text-secondary">{g.total.toLocaleString('it-IT')} totali</span>
           </div>
           <div className="d-flex flex-wrap gap-2">
             {g.items.map((it) => (
-              <span
-                key={it.status}
-                className="d-inline-flex align-items-center gap-1 small"
-              >
+              <span key={it.status} className="d-inline-flex align-items-center gap-1 small">
                 <SemanticStatusBadge status={it.status} />
                 <span className="text-secondary">{it.count.toLocaleString('it-IT')}</span>
               </span>

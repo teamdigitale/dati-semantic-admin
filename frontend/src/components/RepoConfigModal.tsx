@@ -15,20 +15,14 @@ interface RepoConfigModalProps {
  * Modal per editare la configurazione di un singolo repository.
  * Wrappa {@link ConfigEditor} scope=REPO con header e azione "Chiudi".
  */
-export default function RepoConfigModal({
-  isOpen,
-  onClose,
-  repo,
-  editable,
-}: RepoConfigModalProps) {
+export default function RepoConfigModal({ isOpen, onClose, repo, editable }: RepoConfigModalProps) {
   return (
     <Modal isOpen={isOpen} toggle={onClose} size="lg" scrollable>
       <ModalHeader toggle={onClose}>
         Configurazione repository
         {repo && (
           <span className="ms-2 text-secondary fw-normal">
-            —{' '}
-            {repo.name ? repo.name : <RepoUrlLabel url={repo.url} asLink={false} />}
+            — {repo.name ? repo.name : <RepoUrlLabel url={repo.url} asLink={false} />}
           </span>
         )}
       </ModalHeader>

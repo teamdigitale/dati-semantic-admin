@@ -631,3 +631,111 @@ body {
     padding: 1.15rem !important;
   }
 }
+
+/* ----- AuditPage: dettaglio modifiche (DeltaDetailModal) ----- */
+.delta-summary-section {
+  border: 1px solid #e4e8ec;
+  border-radius: 6px;
+  background-color: #ffffff;
+  padding: 0.75rem 0.9rem;
+}
+
+.delta-summary-iri-list,
+.delta-summary-triples {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.delta-summary-iri-list li,
+.delta-summary-triples li {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.delta-summary-symbol {
+  display: inline-block;
+  width: 1ch;
+  margin-right: 0.45rem;
+  font-weight: 700;
+}
+
+.delta-summary-modified {
+  padding: 0.5rem 0.6rem;
+  background-color: #fff8e6;
+  border: 1px solid #f0e0a0;
+  border-radius: 4px;
+}
+
+.delta-summary-object {
+  color: #17324d;
+}
+
+/* ----- AuditPage: autocomplete IRI custom (IriSearchInput) ----- */
+.iri-search-wrapper {
+  position: relative;
+}
+
+.iri-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background-color: #ffffff;
+  border: 1px solid #dfe4ea;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.iri-suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.iri-suggestions-list li + li {
+  border-top: 1px solid #f0f3f6;
+}
+
+.iri-suggestion-button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+}
+
+.iri-suggestion-button:hover,
+.iri-suggestion-button:focus {
+  background-color: #f4f7fb;
+  outline: none;
+}
+
+.iri-suggestion-title {
+  color: #17324d;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.iri-suggestion-type {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+}
+
+.iri-suggestion-iri {
+  margin-top: 0.15rem;
+  font-size: 0.74rem;
+  color: #6c7787;
+}
+
+.iri-suggestion-iri code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}

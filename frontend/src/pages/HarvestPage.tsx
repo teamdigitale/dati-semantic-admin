@@ -41,18 +41,14 @@ export default function HarvestPage() {
   const hasActivity = displayed.length > 0
   // Convenzione N+1: avanziamo l'offset di PAGE_SIZE per ogni pagina, ma
   // chiediamo PAGE_SIZE+1 batch al BE per dedurre hasNext dal risultato.
-  const runs = useHarvestRunsByBatch(
-    page * PAGE_SIZE,
-    PAGE_SIZE + 1,
-    hasActivity ? POLL_MS : false,
-  )
+  const runs = useHarvestRunsByBatch(page * PAGE_SIZE, PAGE_SIZE + 1, hasActivity ? POLL_MS : false)
 
   const groups = useMemo(() => groupRuns(runs.data ?? []), [runs.data])
   const hasNext = groups.length > PAGE_SIZE
   const pagedGroups = hasNext ? groups.slice(0, PAGE_SIZE) : groups
   const totalRunsOnPage = useMemo(
     () => pagedGroups.reduce((acc, g) => acc + g.runs.length, 0),
-    [pagedGroups],
+    [pagedGroups]
   )
 
   const toggleExpanded = (key: string) =>
@@ -86,7 +82,7 @@ export default function HarvestPage() {
                 if (
                   confirm(
                     "Avviare l'harvest di tutti i repository con force=true?\n" +
-                      "Saranno rieseguiti anche i run gia' processati con la stessa revision.",
+                      "Saranno rieseguiti anche i run gia' processati con la stessa revision."
                   )
                 ) {
                   startAll.mutate(true)
@@ -206,7 +202,7 @@ interface DisplayedRunningItem {
 
 function reconcileDisplayed(
   prev: DisplayedRunningItem[],
-  fresh: RunningInstance[],
+  fresh: RunningInstance[]
 ): DisplayedRunningItem[] {
   const freshIds = new Set(fresh.map((r) => r.harvesterRun.id))
   const next: DisplayedRunningItem[] = []
@@ -411,8 +407,7 @@ function BatchRow({
   // in corso (almeno un run non terminato) mostriamo "—".
   const startMs = new Date(group.startedAt).getTime()
   const endMs = group.endedAt ? new Date(group.endedAt).getTime() : null
-  const durationText =
-    endMs !== null ? formatDuration(endMs - startMs) : null
+  const durationText = endMs !== null ? formatDuration(endMs - startMs) : null
 
   return (
     <>
@@ -422,16 +417,14 @@ function BatchRow({
         </td>
         <td>{new Date(group.startedAt).toLocaleString('it-IT')}</td>
         <td>
-          {group.endedAt
-            ? new Date(group.endedAt).toLocaleString('it-IT')
-            : <span className="text-secondary">—</span>}
-        </td>
-        <td>
-          {durationText ? (
-            <code>{durationText}</code>
+          {group.endedAt ? (
+            new Date(group.endedAt).toLocaleString('it-IT')
           ) : (
             <span className="text-secondary">—</span>
           )}
+        </td>
+        <td>
+          {durationText ? <code>{durationText}</code> : <span className="text-secondary">—</span>}
         </td>
         <td className="text-end">{group.runs.length}</td>
         <td>
@@ -507,7 +500,11 @@ function BatchDetail({
             const startMs = new Date(r.startedAt).getTime()
             const endMs = r.endedAt ? new Date(r.endedAt).getTime() : null
             const duration =
-              endMs !== null ? formatDuration(endMs - startMs) : <span className="text-secondary">—</span>
+              endMs !== null ? (
+                formatDuration(endMs - startMs)
+              ) : (
+                <span className="text-secondary">—</span>
+              )
             return (
               <tr key={r.id}>
                 <td>
@@ -561,7 +558,10 @@ function Pagination({
   onNext: () => void
 }) {
   return (
-    <nav className="d-flex justify-content-end align-items-center gap-2 mt-2" aria-label="Paginazione">
+    <nav
+      className="d-flex justify-content-end align-items-center gap-2 mt-2"
+      aria-label="Paginazione"
+    >
       <Button color="secondary" outline size="xs" onClick={onPrev} disabled={page === 0}>
         <Icon icon="it-chevron-left" size="xs" className="me-1" />
         Precedente

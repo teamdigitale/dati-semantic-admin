@@ -94,8 +94,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <ul className="link-list">
                   {visibleNav.map((entry) => {
                     const active =
-                      location.pathname === entry.to ||
-                      location.pathname.startsWith(entry.to + '/')
+                      location.pathname === entry.to || location.pathname.startsWith(entry.to + '/')
                     return (
                       <li key={entry.to}>
                         <RouterNavLink

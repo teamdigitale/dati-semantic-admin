@@ -61,8 +61,7 @@ export default function AddRepositoryModal({ isOpen, onClose }: AddRepositoryMod
   }, [isOpen])
 
   const update =
-    (key: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((prev) => ({ ...prev, [key]: e.target.value }))
       // Una modifica a owner/repo invalida un eventuale risultato di verifica precedente.
       if (key === 'owner' || key === 'repo') inspect.reset()

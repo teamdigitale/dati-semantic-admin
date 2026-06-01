@@ -1,7 +1,12 @@
-import { useState } from 'react'
-import { Button, Card, CardBody, CardTitle, Icon, Input, Row, Col } from 'design-react-kit'
+import { useMemo, useState } from 'react'
+import { Button, Card, CardBody, CardTitle, Icon, Row, Col } from 'design-react-kit'
 import { useRepositories } from '../hooks/useRepositories'
 import { useChangelog, useLatestDelta, useLatestDeltaSummary } from '../hooks/useAudit'
+import DeltaDetailModal, { type DeltaDetailPayload } from '../components/DeltaDetailModal'
+import IriSearchInput from '../components/IriSearchInput'
+import type { Repository } from '../api/types/repository'
+
+type DetailContext = { kind: 'delta' | 'changelog'; index: number } | null
 
 export default function AuditPage() {
   const repos = useRepositories()
@@ -12,6 +17,50 @@ export default function AuditPage() {
   const summary = useLatestDeltaSummary(selectedRepoId || undefined)
   const delta = useLatestDelta(selectedRepoId || undefined, { limit: 20 })
   const changelog = useChangelog(activeIri || undefined, 0, 20)
+  const [detailCtx, setDetailCtx] = useState<DetailContext>(null)
+
+  const repoById = useMemo<Map<string, Repository>>(() => {
+    const map = new Map<string, Repository>()
+    repos.data?.forEach((r) => map.set(r.id, r))
+    return map
+  }, [repos.data])
+
+  const detailItem = useMemo<DeltaDetailPayload | null>(() => {
+    if (!detailCtx) return null
+    if (detailCtx.kind === 'delta') {
+      return delta.data?.content[detailCtx.index] ?? null
+    }
+    if (!changelog.data) return null
+    const entry = changelog.data.content[detailCtx.index]
+    if (!entry) return null
+    return {
+      assetIri: changelog.data.assetIri,
+      assetType: changelog.data.assetType,
+      changeKind: entry.changeKind,
+      createdAt: entry.createdAt,
+      summary: entry.summary,
+    }
+  }, [detailCtx, delta.data, changelog.data])
+
+  const detailListLen = detailCtx
+    ? detailCtx.kind === 'delta'
+      ? (delta.data?.content.length ?? 0)
+      : (changelog.data?.content.length ?? 0)
+    : 0
+
+  const detailNav = useMemo<{ onPrev?: () => void; onNext?: () => void }>(() => {
+    if (!detailCtx) return {}
+    // Liste DESC per createdAt: indice piu' alto = piu' vecchio = "anteriore".
+    const hasPrev = detailCtx.index < detailListLen - 1
+    const hasNext = detailCtx.index > 0
+    return {
+      onPrev: hasPrev ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index + 1 }) : undefined,
+      onNext: hasNext ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index - 1 }) : undefined,
+    }
+  }, [detailCtx, detailListLen])
+
+  const detailPosition =
+    detailCtx && detailListLen > 0 ? { index: detailCtx.index, total: detailListLen } : undefined
 
   return (
     <section className="admin-page">
@@ -78,10 +127,13 @@ export default function AuditPage() {
                     <th>Tipo</th>
                     <th>Cambio</th>
                     <th>Quando</th>
+                    <th className="text-end" style={{ width: 80 }}>
+                      Azioni
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {delta.data.content.map((item) => (
+                  {delta.data.content.map((item, index) => (
                     <tr key={item.assetIri + item.harvesterRunId}>
                       <td className="text-truncate" style={{ maxWidth: 360 }}>
                         <code>{item.assetIri}</code>
@@ -91,6 +143,18 @@ export default function AuditPage() {
                         <span className="badge bg-info">{item.changeKind}</span>
                       </td>
                       <td className="small">{new Date(item.createdAt).toLocaleString('it-IT')}</td>
+                      <td className="text-end">
+                        <Button
+                          size="xs"
+                          color="secondary"
+                          outline
+                          title="Dettaglio modifiche"
+                          aria-label="Dettaglio modifiche"
+                          onClick={() => setDetailCtx({ kind: 'delta', index })}
+                        >
+                          <Icon icon="it-zoom-in" size="sm" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -117,13 +181,14 @@ export default function AuditPage() {
 
           <Row className="g-2 align-items-end mb-3">
             <Col md={9}>
-              <Input
-                type="text"
-                label="Asset IRI"
-                id="iri-input"
+              <label htmlFor="iri-input" className="form-label small">
+                Asset IRI
+              </label>
+              <IriSearchInput
+                inputId="iri-input"
                 value={iriInput}
-                onChange={(e) => setIriInput(e.target.value)}
-                placeholder="https://w3id.org/italia/onto/..."
+                onChange={setIriInput}
+                placeholder="Cerca per titolo o incolla un IRI…"
               />
             </Col>
             <Col md={3}>
@@ -172,12 +237,17 @@ export default function AuditPage() {
                       <th>Cambio</th>
                       <th>Run</th>
                       <th>Quando</th>
+                      <th className="text-end" style={{ width: 80 }}>
+                        Azioni
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {changelog.data.content.map((entry) => (
+                    {changelog.data.content.map((entry, index) => (
                       <tr key={entry.runId + entry.createdAt}>
-                        <td>{entry.repositoryId}</td>
+                        <td>
+                          <RepoCell repoId={entry.repositoryId} repo={repoById.get(entry.repositoryId)} />
+                        </td>
                         <td>
                           <code>{entry.revision ?? '—'}</code>
                         </td>
@@ -190,6 +260,18 @@ export default function AuditPage() {
                         <td className="small">
                           {new Date(entry.createdAt).toLocaleString('it-IT')}
                         </td>
+                        <td className="text-end">
+                          <Button
+                            size="xs"
+                            color="secondary"
+                            outline
+                            title="Dettaglio modifiche"
+                            aria-label="Dettaglio modifiche"
+                            onClick={() => setDetailCtx({ kind: 'changelog', index })}
+                          >
+                            <Icon icon="it-zoom-in" size="sm" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -199,6 +281,27 @@ export default function AuditPage() {
           )}
         </CardBody>
       </Card>
+
+      <DeltaDetailModal
+        isOpen={detailItem !== null}
+        onClose={() => setDetailCtx(null)}
+        item={detailItem}
+        onPrev={detailNav.onPrev}
+        onNext={detailNav.onNext}
+        position={detailPosition}
+      />
     </section>
   )
+}
+
+function RepoCell({ repoId, repo }: { repoId: string; repo: Repository | undefined }) {
+  if (!repo) {
+    return (
+      <code className="small text-muted" title={`Repository non più configurato — id: ${repoId}`}>
+        {repoId}
+      </code>
+    )
+  }
+  const label = repo.name ?? repo.url
+  return <span title={repo.url}>{label}</span>
 }

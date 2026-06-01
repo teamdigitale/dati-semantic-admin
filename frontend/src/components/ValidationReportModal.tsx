@@ -1,13 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  Badge,
-  Button,
-  Icon,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from 'design-react-kit'
+import { Badge, Button, Icon, Modal, ModalBody, ModalFooter, ModalHeader } from 'design-react-kit'
 import { useValidationReport } from '../hooks/useRepositories'
 import RepoUrlLabel from './RepoUrlLabel'
 import type {
@@ -83,11 +75,7 @@ function CopyJsonButton({ report }: { report: ValidationReport }) {
   }
   return (
     <Button color="secondary" outline onClick={onCopy}>
-      <Icon
-        icon={copied ? 'it-check' : 'it-copy'}
-        size="sm"
-        className="me-2"
-      />
+      <Icon icon={copied ? 'it-check' : 'it-copy'} size="sm" className="me-2" />
       {copied ? 'Copiato' : 'Copia JSON'}
     </Button>
   )
@@ -99,8 +87,8 @@ function ReportError({ error }: { error: unknown }) {
   if (message.includes('404')) {
     return (
       <p className="text-secondary mb-0">
-        Nessun validation report disponibile per questo repository: probabilmente non è ancora
-        stato eseguito un harvest, oppure l'ultimo run non ha generato un report.
+        Nessun validation report disponibile per questo repository: probabilmente non è ancora stato
+        eseguito un harvest, oppure l'ultimo run non ha generato un report.
       </p>
     )
   }
@@ -110,7 +98,7 @@ function ReportError({ error }: { error: unknown }) {
 function ReportContent({ report }: { report: ValidationReport }) {
   const summary = report.summary ?? computeSummary(report)
   const [tab, setTab] = useState<TabKey>(
-    (report.repositoryChecks?.length ?? 0) > 0 ? 'repository' : 'assets',
+    (report.repositoryChecks?.length ?? 0) > 0 ? 'repository' : 'assets'
   )
 
   const repoCount = report.repositoryChecks?.length ?? 0
@@ -282,7 +270,7 @@ function IssueTableRow({ issue }: { issue: ValidationIssue }) {
         <CategoryChip category={issue.category} />
       </td>
       <td>
-        {(issue.details || location) ? (
+        {issue.details || location ? (
           <>
             {location && <div className="text-secondary small mb-1">{location}</div>}
             {issue.details && (
@@ -439,10 +427,7 @@ function AssetsTab({ assets }: { assets: AssetValidationReport[] }) {
         </span>
       </div>
 
-      <div
-        className="border rounded"
-        style={{ maxHeight: '60vh', overflowY: 'auto' }}
-      >
+      <div className="border rounded" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
         {filtered.length === 0 ? (
           <p className="small text-secondary p-3 mb-0">Nessun asset trovato per la ricerca.</p>
         ) : (
@@ -487,11 +472,7 @@ function AssetRow({
         aria-expanded={isOpen}
       >
         <span className="text-truncate me-2" style={{ minWidth: 0 }}>
-          <Icon
-            icon={isOpen ? 'it-arrow-down' : 'it-chevron-right'}
-            size="xs"
-            className="me-2"
-          />
+          <Icon icon={isOpen ? 'it-arrow-down' : 'it-chevron-right'} size="xs" className="me-2" />
           {asset.assetType && (
             <Badge color="secondary" className="me-2 small">
               {asset.assetType}

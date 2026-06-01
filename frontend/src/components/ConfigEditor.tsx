@@ -41,11 +41,7 @@ export default function ConfigEditor({ repoId, scope, editable = true }: ConfigE
 
   const visible = metadata.data.filter((m) => m.scopes.includes(scope))
   if (visible.length === 0) {
-    return (
-      <p className="small text-secondary mb-0">
-        Nessuna chiave applicabile a questo scope.
-      </p>
-    )
+    return <p className="small text-secondary mb-0">Nessuna chiave applicabile a questo scope.</p>
   }
 
   return (
@@ -141,7 +137,9 @@ function ConfigRow({ meta, entry, editable, saving, removing, onSave, onDelete }
                 label=""
                 checked={draft === 'true'}
                 disabled={!effectiveEditable}
-                onChange={(e) => setDraft((e.target as HTMLInputElement).checked ? 'true' : 'false')}
+                onChange={(e) =>
+                  setDraft((e.target as HTMLInputElement).checked ? 'true' : 'false')
+                }
               />
               <StatusBadge active={draft === 'true'} />
             </div>

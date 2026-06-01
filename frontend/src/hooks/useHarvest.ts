@@ -18,7 +18,7 @@ export function useHarvestRuns(refetchInterval?: number | false) {
 export function useHarvestRunsByBatch(
   offset: number,
   limit: number,
-  refetchInterval?: number | false,
+  refetchInterval?: number | false
 ) {
   return useQuery({
     queryKey: queryKeys.harvestRunsByBatch(offset, limit),
