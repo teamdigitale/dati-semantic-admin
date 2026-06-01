@@ -15,11 +15,11 @@ export default function RepositoriesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
-    <section>
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <section className="admin-page">
+      <div className="admin-page-header">
         <div>
-          <h1 className="mb-1">Repository</h1>
-          <p className="text-secondary mb-0">Repository censiti e harvestati periodicamente.</p>
+          <h1 className="admin-page-title">Repository</h1>
+          <p className="admin-page-subtitle">Repository censiti e harvestati periodicamente.</p>
         </div>
         {isAdmin && (
           <Button color="primary" disabled>
@@ -29,16 +29,18 @@ export default function RepositoriesPage() {
         )}
       </div>
 
-      <Card className="shadow-sm">
-        <CardBody>
+      <Card className="admin-card">
+        <CardBody className="admin-card-body">
           {repos.isLoading && <p>Caricamento…</p>}
-          {repos.isError && <p className="text-danger">Errore nel recupero dei repository.</p>}
+          {repos.isError && (
+            <p className="admin-empty text-danger">Errore nel recupero dei repository.</p>
+          )}
           {repos.data && repos.data.length === 0 && (
-            <p className="text-secondary">Nessun repository censito.</p>
+            <p className="admin-empty">Nessun repository censito.</p>
           )}
           {repos.data && repos.data.length > 0 && (
             <div className="table-responsive">
-              <table className="table table-hover mb-0 align-middle">
+              <table className="table table-hover mb-0 align-middle admin-table">
                 <thead>
                   <tr>
                     <th style={{ width: 32 }}></th>
@@ -150,7 +152,7 @@ function RepoRow({
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={6} className="bg-light p-3">
+          <td colSpan={6} className="admin-expanded-cell">
             <RepoDetail repoId={repo.id} />
           </td>
         </tr>
@@ -176,7 +178,7 @@ function RepoDetail({ repoId }: { repoId: string }) {
   }
 
   return (
-    <div className="row g-3">
+    <div className="row g-3 admin-detail-panel p-3">
       <div className="col-md-6">
         <h6>Config</h6>
         {config.isLoading && <p className="small text-secondary">Caricamento…</p>}
@@ -185,7 +187,7 @@ function RepoDetail({ repoId }: { repoId: string }) {
           <p className="small text-secondary">Nessuna chiave di configurazione.</p>
         )}
         {config.data && Object.keys(config.data).length > 0 && (
-          <table className="table table-sm mb-0">
+          <table className="table table-sm mb-0 admin-table">
             <thead>
               <tr>
                 <th>Chiave</th>
@@ -216,7 +218,7 @@ function RepoDetail({ repoId }: { repoId: string }) {
         {reportError && <p className="small text-danger mt-2 mb-0">{reportError}</p>}
         {report && (
           <pre
-            className="bg-white border p-2 small mt-2 mb-0"
+            className="admin-code-block p-2 small mt-2 mb-0"
             style={{ maxHeight: 240, overflow: 'auto' }}
           >
             {report}

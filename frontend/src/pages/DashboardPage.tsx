@@ -14,18 +14,15 @@ interface StatCardProps {
 
 function StatCard({ title, value, iconName, loading, color = 'primary' }: StatCardProps) {
   return (
-    <Card className="shadow-sm h-100">
-      <CardBody>
-        <div className="d-flex align-items-center gap-3">
-          <div
-            className={`bg-${color} text-white rounded-circle p-3 d-flex align-items-center justify-content-center`}
-            style={{ width: 48, height: 48 }}
-          >
+    <Card className="admin-stat-card h-100">
+      <CardBody className="admin-card-body">
+        <div className="admin-stat-content">
+          <div className={`admin-stat-icon bg-${color}`}>
             <Icon icon={iconName} size="sm" color="white" />
           </div>
-          <div>
-            <CardText className="text-secondary text-uppercase small mb-1">{title}</CardText>
-            <CardTitle tag="h3" className="mb-0">
+          <div className="admin-stat-copy">
+            <CardText className="admin-stat-label">{title}</CardText>
+            <CardTitle tag="h3" className="admin-stat-value">
               {loading ? '…' : value}
             </CardTitle>
           </div>
@@ -47,11 +44,15 @@ export default function DashboardPage() {
   const failedRuns = runs.data?.filter((r) => r.status === 'FAILURE').length ?? 0
 
   return (
-    <section>
-      <h1 className="mb-1">Dashboard</h1>
-      <p className="text-secondary mb-4">Stato di salute dell'harvester NDC.</p>
+    <section className="admin-page">
+      <div className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">Dashboard</h1>
+          <p className="admin-page-subtitle">Stato di salute dell'harvester NDC.</p>
+        </div>
+      </div>
 
-      <Row className="g-3 mb-4">
+      <Row className="g-4 mb-4">
         <Col md={6} lg={3}>
           <StatCard
             title="Stato BE"
@@ -89,22 +90,25 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
-      <Row className="g-3">
+      <Row className="g-4">
         <Col lg={6}>
-          <Card className="shadow-sm h-100">
-            <CardBody>
-              <CardTitle tag="h5">Distribuzione per stato (catalogo)</CardTitle>
-              <p className="text-secondary small mb-3">
-                Da <code>/dashboard/aggregated-count-data</code> con dimensione <code>STATUS</code>.
+          <Card className="admin-card h-100">
+            <CardBody className="admin-card-body">
+              <CardTitle tag="h5" className="admin-card-title">
+                Distribuzione per stato
+              </CardTitle>
+              <p className="admin-card-hint">
+                Catalogo aggregato per stato da <code>/dashboard/aggregated-count-data</code>.
               </p>
               {countByStatus.isLoading && <p>Caricamento…</p>}
               {countByStatus.isError && (
-                <p className="text-danger mb-0">
-                  Errore nel recupero delle statistiche aggregate.
-                </p>
+                <p className="text-danger mb-0">Errore nel recupero delle statistiche aggregate.</p>
               )}
               {countByStatus.data && (
-                <pre className="bg-light p-2 small mb-0" style={{ maxHeight: 240, overflow: 'auto' }}>
+                <pre
+                  className="bg-light p-2 small mb-0"
+                  style={{ maxHeight: 240, overflow: 'auto' }}
+                >
                   {JSON.stringify(countByStatus.data, null, 2)}
                 </pre>
               )}
@@ -112,16 +116,18 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col lg={6}>
-          <Card className="shadow-sm h-100">
-            <CardBody>
-              <CardTitle tag="h5">Run recenti</CardTitle>
+          <Card className="admin-card h-100">
+            <CardBody className="admin-card-body">
+              <CardTitle tag="h5" className="admin-card-title">
+                Run recenti
+              </CardTitle>
               {runs.isLoading && <p>Caricamento…</p>}
               {runs.data && runs.data.length === 0 && (
                 <p className="text-secondary mb-0">Nessun run registrato.</p>
               )}
               {runs.data && runs.data.length > 0 && (
                 <div className="table-responsive">
-                  <table className="table table-hover table-sm mb-0">
+                  <table className="admin-table table table-hover table-sm mb-0">
                     <thead>
                       <tr>
                         <th>Repository</th>
@@ -138,9 +144,7 @@ export default function DashboardPage() {
                           <td>
                             <span className={`badge ${statusBadge(r.status)}`}>{r.status}</span>
                           </td>
-                          <td className="small">
-                            {new Date(r.startedAt).toLocaleString('it-IT')}
-                          </td>
+                          <td className="small">{new Date(r.startedAt).toLocaleString('it-IT')}</td>
                         </tr>
                       ))}
                     </tbody>

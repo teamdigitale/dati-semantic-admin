@@ -5,12 +5,16 @@ import { ValidationService } from '../services/ValidationService'
 
 export default function ValidatePage() {
   return (
-    <section>
-      <h1 className="mb-1">Validate</h1>
-      <p className="text-secondary mb-4">
-        Strumenti di validazione on-demand: conformance di un repository GitHub,
-        validazione sintattica RDF di un file, polling dello stato di un job.
-      </p>
+    <section className="admin-page">
+      <div className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">Validate</h1>
+          <p className="admin-page-subtitle">
+            Strumenti di validazione on-demand: conformance di un repository GitHub, validazione
+            sintattica RDF di un file, polling dello stato di un job.
+          </p>
+        </div>
+      </div>
 
       <Row className="g-4">
         <Col lg={6}>
@@ -37,13 +41,13 @@ function RepoCheckCard() {
   })
 
   return (
-    <Card className="shadow-sm h-100">
-      <CardBody>
-        <CardTitle tag="h5" className="d-flex align-items-center gap-2">
+    <Card className="admin-card h-100">
+      <CardBody className="admin-card-body">
+        <CardTitle tag="h5" className="admin-card-title">
           <Icon icon="it-github" size="sm" />
           Conformance check repository
         </CardTitle>
-        <p className="text-secondary small mb-3">
+        <p className="admin-card-hint">
           Valida un repository GitHub contro il template cookiecutter NDC.
         </p>
         <Row className="g-2">
@@ -115,22 +119,24 @@ function SyntaxCheckCard() {
   })
 
   return (
-    <Card className="shadow-sm h-100">
-      <CardBody>
-        <CardTitle tag="h5" className="d-flex align-items-center gap-2">
+    <Card className="admin-card h-100">
+      <CardBody className="admin-card-body">
+        <CardTitle tag="h5" className="admin-card-title">
           <Icon icon="it-file" size="sm" />
           Validazione sintattica RDF
         </CardTitle>
-        <p className="text-secondary small mb-3">
-          Carica un file Turtle/RDF e verifica la sintassi.
-        </p>
+        <p className="admin-card-hint">Carica un file Turtle/RDF e verifica la sintassi.</p>
         <input
           type="file"
-          className="form-control mb-3"
+          className="form-control admin-file-input mb-3"
           accept=".ttl,.rdf,.nt,.n3,.jsonld"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button color="primary" disabled={!file || submit.isPending} onClick={() => submit.mutate()}>
+        <Button
+          color="primary"
+          disabled={!file || submit.isPending}
+          onClick={() => submit.mutate()}
+        >
           <Icon icon="it-upload" size="sm" color="white" className="me-2" />
           {submit.isPending ? 'Validazione…' : 'Valida sintassi'}
         </Button>
@@ -140,7 +146,9 @@ function SyntaxCheckCard() {
           </p>
         )}
         {submit.data && (
-          <div className={`alert mt-3 mb-0 ${submit.data.valid ? 'alert-success' : 'alert-danger'}`}>
+          <div
+            className={`alert mt-3 mb-0 ${submit.data.valid ? 'alert-success' : 'alert-danger'}`}
+          >
             <strong>{submit.data.valid ? 'Sintassi valida' : 'Sintassi invalida'}</strong>
             {submit.data.errors && submit.data.errors.length > 0 && (
               <ul className="mb-0 mt-2">
@@ -164,13 +172,13 @@ function JobStatusCard() {
   })
 
   return (
-    <Card className="shadow-sm">
-      <CardBody>
-        <CardTitle tag="h5" className="d-flex align-items-center gap-2">
+    <Card className="admin-card">
+      <CardBody className="admin-card-body">
+        <CardTitle tag="h5" className="admin-card-title">
           <Icon icon="it-search" size="sm" />
           Stato job di validazione
         </CardTitle>
-        <p className="text-secondary small mb-3">
+        <p className="admin-card-hint">
           Polling manuale dello stato di un job lanciato sopra (o da CI esterna).
         </p>
         <Row className="g-2 align-items-end">
@@ -202,7 +210,10 @@ function JobStatusCard() {
           </p>
         )}
         {poll.data && (
-          <pre className="bg-light p-2 mt-3 small mb-0" style={{ maxHeight: 320, overflow: 'auto' }}>
+          <pre
+            className="admin-code-block mt-3 small mb-0"
+            style={{ maxHeight: 320, overflow: 'auto' }}
+          >
             {JSON.stringify(poll.data, null, 2)}
           </pre>
         )}

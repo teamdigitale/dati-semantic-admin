@@ -15,14 +15,14 @@ export default function HarvestPage() {
   const isAdmin = useIsAdmin()
 
   return (
-    <section>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <section className="admin-page">
+      <div className="admin-page-header">
         <div>
-          <h1 className="mb-1">Harvest</h1>
-          <p className="text-secondary mb-0">Gestione dei job di harvesting.</p>
+          <h1 className="admin-page-title">Harvest</h1>
+          <p className="admin-page-subtitle">Gestione dei job di harvesting.</p>
         </div>
         {isAdmin && (
-          <div className="d-flex gap-2">
+          <div className="admin-actions">
             <Button
               color="primary"
               onClick={() => startAll.mutate(false)}
@@ -48,12 +48,12 @@ export default function HarvestPage() {
 
       <Row className="g-3 mb-4">
         <Col md={6}>
-          <Card className="shadow-sm h-100">
-            <CardBody>
-              <h5 className="mb-3">In esecuzione</h5>
+          <Card className="admin-card h-100">
+            <CardBody className="admin-card-body">
+              <h2 className="admin-card-title">In esecuzione</h2>
               {running.isLoading && <p>Caricamento…</p>}
               {running.data && running.data.length === 0 && (
-                <p className="text-secondary mb-0">Nessun job in esecuzione.</p>
+                <p className="admin-empty">Nessun job in esecuzione.</p>
               )}
               {running.data && running.data.length > 0 && (
                 <ul className="list-unstyled mb-0">
@@ -74,16 +74,16 @@ export default function HarvestPage() {
         </Col>
       </Row>
 
-      <Card className="shadow-sm">
-        <CardBody>
-          <h5 className="mb-3">Storico run</h5>
+      <Card className="admin-card">
+        <CardBody className="admin-card-body">
+          <h2 className="admin-card-title">Storico run</h2>
           {runs.isLoading && <p>Caricamento…</p>}
           {runs.data && runs.data.length === 0 && (
-            <p className="text-secondary mb-0">Nessun run registrato.</p>
+            <p className="admin-empty">Nessun run registrato.</p>
           )}
           {runs.data && runs.data.length > 0 && (
             <div className="table-responsive">
-              <table className="table table-hover mb-0">
+              <table className="table table-hover mb-0 admin-table">
                 <thead>
                   <tr>
                     <th>Repository</th>

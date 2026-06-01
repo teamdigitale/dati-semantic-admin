@@ -7,6 +7,7 @@ import App from './App'
 // Bootstrap Italia (CSS + JS components: tooltips, dropdowns, modali...)
 import 'bootstrap-italia/dist/css/bootstrap-italia.min.css'
 import 'bootstrap-italia/dist/js/bootstrap-italia.bundle.min.js'
+import './styles/app.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

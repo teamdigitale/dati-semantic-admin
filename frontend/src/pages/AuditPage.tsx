@@ -14,16 +14,20 @@ export default function AuditPage() {
   const changelog = useChangelog(activeIri || undefined, 0, 20)
 
   return (
-    <section>
-      <h1 className="mb-1">Audit</h1>
-      <p className="text-secondary mb-4">
-        Delta semantico per repository (ultimo run) e changelog per singolo asset (cross-repo).
-      </p>
+    <section className="admin-page">
+      <div className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">Audit</h1>
+          <p className="admin-page-subtitle">
+            Delta semantico per repository (ultimo run) e changelog per singolo asset (cross-repo).
+          </p>
+        </div>
+      </div>
 
       {/* --- Delta per repository (ultimo run) --- */}
-      <Card className="shadow-sm mb-4">
-        <CardBody>
-          <CardTitle tag="h5" className="d-flex align-items-center gap-2">
+      <Card className="admin-card mb-4">
+        <CardBody className="admin-card-body">
+          <CardTitle tag="h5" className="admin-card-title">
             <Icon icon="it-folder" size="sm" />
             Delta dell'ultimo run
           </CardTitle>
@@ -32,9 +36,9 @@ export default function AuditPage() {
               <label htmlFor="repo-select" className="form-label small">
                 Repository
               </label>
-              <Input
-                type="select"
+              <select
                 id="repo-select"
+                className="form-select"
                 value={selectedRepoId}
                 onChange={(e) => setSelectedRepoId(e.target.value)}
               >
@@ -44,7 +48,7 @@ export default function AuditPage() {
                     {r.name ?? r.url}
                   </option>
                 ))}
-              </Input>
+              </select>
             </Col>
           </Row>
 
@@ -55,12 +59,10 @@ export default function AuditPage() {
               <Row className="g-2">
                 {Object.entries(summary.data.byChangeKind).map(([kind, count]) => (
                   <Col key={kind} xs={6} md={3}>
-                    <Card className="border bg-light">
-                      <CardBody className="py-2">
-                        <small className="text-secondary text-uppercase">{kind}</small>
-                        <div className="h4 mb-0">{count}</div>
-                      </CardBody>
-                    </Card>
+                    <div className="admin-summary-tile">
+                      <small>{kind}</small>
+                      <div>{count}</div>
+                    </div>
                   </Col>
                 ))}
               </Row>
@@ -69,7 +71,7 @@ export default function AuditPage() {
 
           {selectedRepoId && delta.data && delta.data.content.length > 0 && (
             <div className="table-responsive">
-              <table className="table table-hover table-sm mb-0">
+              <table className="table table-hover table-sm mb-0 admin-table">
                 <thead>
                   <tr>
                     <th>Asset IRI</th>
@@ -96,19 +98,19 @@ export default function AuditPage() {
             </div>
           )}
           {selectedRepoId && delta.data && delta.data.content.length === 0 && (
-            <p className="text-secondary mb-0">Nessuna modifica nell'ultimo run.</p>
+            <p className="admin-empty">Nessuna modifica nell'ultimo run.</p>
           )}
         </CardBody>
       </Card>
 
       {/* --- Changelog per singolo asset --- */}
-      <Card className="shadow-sm">
-        <CardBody>
-          <CardTitle tag="h5" className="d-flex align-items-center gap-2">
-            <Icon icon="it-history" size="sm" />
+      <Card className="admin-card">
+        <CardBody className="admin-card-body">
+          <CardTitle tag="h5" className="admin-card-title">
+            <Icon icon="it-clock" size="sm" />
             Changelog per asset (cross-repository)
           </CardTitle>
-          <p className="text-secondary small mb-3">
+          <p className="admin-card-hint">
             Time-series dei cambi a un singolo asset semantico, identificato per IRI. Da{' '}
             <code>/semantic-assets/changelog?iri=...</code>.
           </p>
@@ -138,9 +140,7 @@ export default function AuditPage() {
           </Row>
 
           {!activeIri && (
-            <p className="text-secondary small mb-0">
-              Inserisci un IRI e premi "Carica changelog".
-            </p>
+            <p className="admin-empty">Inserisci un IRI e premi "Carica changelog".</p>
           )}
           {activeIri && changelog.isLoading && <p>Caricamento…</p>}
           {activeIri && changelog.isError && (
@@ -149,7 +149,7 @@ export default function AuditPage() {
             </p>
           )}
           {activeIri && changelog.data && changelog.data.content.length === 0 && (
-            <p className="text-secondary mb-0">Nessuna voce per l'IRI specificato.</p>
+            <p className="admin-empty">Nessuna voce per l'IRI specificato.</p>
           )}
           {activeIri && changelog.data && changelog.data.content.length > 0 && (
             <>
@@ -157,12 +157,14 @@ export default function AuditPage() {
                 Asset: <code>{changelog.data.assetIri}</code>
                 {changelog.data.assetType && (
                   <>
-                    {' '}— tipo <strong>{changelog.data.assetType}</strong>
+                    {' '}
+                    — tipo <strong>{changelog.data.assetType}</strong>
                   </>
-                )}{' '}— <strong>{changelog.data.total}</strong> voci totali
+                )}{' '}
+                — <strong>{changelog.data.total}</strong> voci totali
               </p>
               <div className="table-responsive">
-                <table className="table table-hover table-sm mb-0">
+                <table className="table table-hover table-sm mb-0 admin-table">
                   <thead>
                     <tr>
                       <th>Repository</th>
