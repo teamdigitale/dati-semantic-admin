@@ -2,11 +2,16 @@ import { NdcClient } from '../api/NdcClient'
 import type {
   CreateRepositoryRequest,
   Repository,
+  RepositoryInspection,
   UpdateRepositoryRequest,
 } from '../api/types/repository'
+import type { ValidationReport } from '../api/types/validation'
 
 export const RepositoryService = {
   list: () => NdcClient.get<Repository[]>('/config/repository'),
+
+  inspect: (url: string) =>
+    NdcClient.get<RepositoryInspection>('/config/repository/inspect', { query: { url } }),
 
   create: (body: CreateRepositoryRequest) =>
     NdcClient.post<void>('/config/repository', body, { responseType: 'void' }),
@@ -17,6 +22,10 @@ export const RepositoryService = {
   remove: (id: string) =>
     NdcClient.delete<void>(`/config/repository/${id}`, { responseType: 'void' }),
 
+  /**
+   * Endpoint BE risponde Content-Type: application/json con la stringa JSON
+   * serializzata dell'oggetto ValidationReport: lasciamo che axios la parsi.
+   */
   validationReport: (id: string) =>
-    NdcClient.get<string>(`/config/repository/${id}/validation-report`, { responseType: 'text' }),
+    NdcClient.get<ValidationReport>(`/config/repository/${id}/validation-report`),
 }

@@ -3,6 +3,15 @@ import { RepositoryService } from '../services/RepositoryService'
 import { queryKeys } from './queryKeys'
 import type { CreateRepositoryRequest, UpdateRepositoryRequest } from '../api/types/repository'
 
+export function useValidationReport(repoId: string | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.repositoryValidationReport(repoId ?? '_'),
+    queryFn: () => RepositoryService.validationReport(repoId!),
+    enabled: !!repoId && options?.enabled !== false,
+    retry: false,
+  })
+}
+
 export function useRepositories() {
   return useQuery({
     queryKey: queryKeys.repositories,

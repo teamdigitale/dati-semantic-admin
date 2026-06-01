@@ -36,11 +36,18 @@ public class SecurityConfig {
                                 "/",
                                 "/index.html",
                                 "/favicon.ico",
+                                "/favicon.svg",
                                 "/assets/**",
                                 "/static/**",
                                 "/login/**",
                                 "/oauth2/**",
-                                "/actuator/health")
+                                "/actuator/health",
+                                // /.well-known/* viene chiesta automaticamente da Chrome
+                                // (es. /.well-known/appspecific/com.chrome.devtools.json per i
+                                // workspace di DevTools). Se non e' permessa, Spring Security la
+                                // salva come "saved request" e dopo il successivo login OAuth2
+                                // l'utente viene rediretto su un URL inesistente -> whitelabel 404.
+                                "/.well-known/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

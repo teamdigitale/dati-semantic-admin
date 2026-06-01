@@ -12,11 +12,14 @@ import {
   Sidebar,
 } from 'design-react-kit'
 import { useMe } from '../../hooks/useMe'
+import { useIsAdmin } from '../../hooks/useHasRole'
 
 interface NavEntry {
   label: string
   to: string
   iconName: string
+  /** se true mostra l'entry solo agli admin */
+  adminOnly?: boolean
 }
 
 const NAV: NavEntry[] = [
@@ -25,6 +28,7 @@ const NAV: NavEntry[] = [
   { label: 'Harvest', to: '/harvest', iconName: 'it-refresh' },
   { label: 'Audit', to: '/audit', iconName: 'it-files' },
   { label: 'Validate', to: '/validate', iconName: 'it-check-circle' },
+  { label: 'Configurazione', to: '/system-config', iconName: 'it-settings', adminOnly: true },
 ]
 
 interface AppLayoutProps {
@@ -33,11 +37,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const me = useMe()
+  const isAdmin = useIsAdmin()
   const [open, setOpen] = useState(false)
   const location = useLocation()
 
   // Chiude la sidebar mobile dopo una navigazione.
   const close = () => setOpen(false)
+
+  const visibleNav = NAV.filter((entry) => !entry.adminOnly || isAdmin)
 
   return (
     <div className="admin-shell">
@@ -85,7 +92,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Sidebar>
               <div className="link-list-wrapper">
                 <ul className="link-list">
-                  {NAV.map((entry) => {
+                  {visibleNav.map((entry) => {
                     const active =
                       location.pathname === entry.to ||
                       location.pathname.startsWith(entry.to + '/')

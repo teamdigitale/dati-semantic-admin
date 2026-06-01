@@ -11,12 +11,18 @@ export type CountDataDimension =
 
 export type TimeDataDimension = 'REPOSITORY_URL' | string
 
+/**
+ * Risposta del BE per /dashboard/aggregated-count-data e /dashboard/aggregated-time-data.
+ * Vedi BE: AggregateDashboardResponse (List<String> headers, List<List<Object>> rows).
+ * Ogni riga ha lunghezza pari a headers.length; il tipo dei singoli valori varia per colonna
+ * (string per dimensioni e date, number per i conteggi).
+ *
+ * NB: per dimension=STATUS le colonne sono ["DATE","STATUS","VAUE"]; "VAUE" e' un typo nel BE
+ * (DashboardService.java:254). Lo gestiamo come stringa opaca.
+ */
 export interface AggregateDashboardResponse {
-  bucketLabels: string[]
-  series: Array<{
-    name: string
-    values: number[]
-  }>
+  headers: string[]
+  rows: Array<Array<string | number | boolean | null>>
 }
 
 export interface SemanticContentStatRow {

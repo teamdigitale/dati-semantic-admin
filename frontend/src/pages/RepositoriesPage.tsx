@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Button, Card, CardBody, Icon } from 'design-react-kit'
+import AddRepositoryModal from '../components/AddRepositoryModal'
+import RepoConfigModal from '../components/RepoConfigModal'
+import RepoUrlLabel from '../components/RepoUrlLabel'
+import ValidationReportModal from '../components/ValidationReportModal'
 import { useRepositories, useDeleteRepository } from '../hooks/useRepositories'
 import { useStartHarvestRepo } from '../hooks/useHarvest'
-import { useRepoConfig } from '../hooks/useConfig'
 import { useIsAdmin } from '../hooks/useHasRole'
-import { RepositoryService } from '../services/RepositoryService'
 import type { Repository } from '../api/types/repository'
 
 export default function RepositoriesPage() {
@@ -12,7 +14,9 @@ export default function RepositoriesPage() {
   const startHarvest = useStartHarvestRepo()
   const remove = useDeleteRepository()
   const isAdmin = useIsAdmin()
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [configRepo, setConfigRepo] = useState<Repository | null>(null)
+  const [validationRepo, setValidationRepo] = useState<Repository | null>(null)
 
   return (
     <section className="admin-page">
@@ -22,12 +26,26 @@ export default function RepositoriesPage() {
           <p className="admin-page-subtitle">Repository censiti e harvestati periodicamente.</p>
         </div>
         {isAdmin && (
-          <Button color="primary" disabled>
+          <Button color="primary" onClick={() => setAddOpen(true)}>
             <Icon icon="it-plus" size="sm" color="white" className="me-2" />
             Aggiungi repository
           </Button>
         )}
       </div>
+
+      {isAdmin && <AddRepositoryModal isOpen={addOpen} onClose={() => setAddOpen(false)} />}
+      <RepoConfigModal
+        isOpen={configRepo !== null}
+        onClose={() => setConfigRepo(null)}
+        repo={configRepo}
+        editable={isAdmin}
+      />
+      <ValidationReportModal
+        isOpen={validationRepo !== null}
+        onClose={() => setValidationRepo(null)}
+        repoId={validationRepo?.id}
+        repoName={validationRepo?.name ?? validationRepo?.url}
+      />
 
       <Card className="admin-card">
         <CardBody className="admin-card-body">
@@ -43,7 +61,6 @@ export default function RepositoriesPage() {
               <table className="table table-hover mb-0 align-middle admin-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 32 }}></th>
                     <th>Nome</th>
                     <th>URL</th>
                     <th>Branch</th>
@@ -56,9 +73,9 @@ export default function RepositoriesPage() {
                     <RepoRow
                       key={r.id}
                       repo={r}
-                      expanded={expandedId === r.id}
-                      onToggle={() => setExpandedId(expandedId === r.id ? null : r.id)}
                       isAdmin={isAdmin}
+                      onConfig={() => setConfigRepo(r)}
+                      onValidation={() => setValidationRepo(r)}
                       onHarvest={() => startHarvest.mutate({ repositoryId: r.id })}
                       harvestPending={startHarvest.isPending}
                       onDelete={() => {
@@ -81,9 +98,9 @@ export default function RepositoriesPage() {
 
 interface RepoRowProps {
   repo: Repository
-  expanded: boolean
-  onToggle: () => void
   isAdmin: boolean
+  onConfig: () => void
+  onValidation: () => void
   onHarvest: () => void
   harvestPending: boolean
   onDelete: () => void
@@ -92,139 +109,80 @@ interface RepoRowProps {
 
 function RepoRow({
   repo,
-  expanded,
-  onToggle,
   isAdmin,
+  onConfig,
+  onValidation,
   onHarvest,
   harvestPending,
   onDelete,
   deletePending,
 }: RepoRowProps) {
   return (
-    <>
-      <tr>
-        <td>
-          <button
-            type="button"
-            className="btn btn-link p-0"
-            aria-label={expanded ? 'Chiudi dettaglio' : 'Apri dettaglio'}
-            onClick={onToggle}
+    <tr>
+      <td>{repo.name ?? <span className="text-secondary">—</span>}</td>
+      <td>
+        <RepoUrlLabel url={repo.url} />
+      </td>
+      <td>
+        <code>{repo.branch ?? 'main'}</code>
+      </td>
+      <td>
+        {repo.active === false ? (
+          <span className="badge bg-secondary">disattivo</span>
+        ) : (
+          <span className="badge bg-success">attivo</span>
+        )}
+      </td>
+      <td className="text-end">
+        <div className="d-inline-flex gap-1">
+          <Button
+            size="xs"
+            color="secondary"
+            outline
+            title="Configurazione repository"
+            aria-label="Configurazione repository"
+            onClick={onConfig}
           >
-            <Icon icon={expanded ? 'it-chevron-top' : 'it-chevron-right'} size="sm" />
-          </button>
-        </td>
-        <td>{repo.name ?? <span className="text-secondary">—</span>}</td>
-        <td className="text-truncate" style={{ maxWidth: 320 }}>
-          <a href={repo.url} target="_blank" rel="noreferrer">
-            {repo.url}
-          </a>
-        </td>
-        <td>
-          <code>{repo.branch ?? 'main'}</code>
-        </td>
-        <td>
-          {repo.active === false ? (
-            <span className="badge bg-secondary">disattivo</span>
-          ) : (
-            <span className="badge bg-success">attivo</span>
-          )}
-        </td>
-        <td className="text-end">
+            <Icon icon="it-settings" size="sm" />
+          </Button>
+          <Button
+            size="xs"
+            color="secondary"
+            outline
+            title="Ultimo validation report"
+            aria-label="Ultimo validation report"
+            onClick={onValidation}
+          >
+            <Icon icon="it-file" size="sm" />
+          </Button>
           {isAdmin && (
             <>
               <Button
                 size="xs"
                 color="primary"
                 outline
-                className="me-2"
+                title="Avvia harvest"
+                aria-label="Avvia harvest"
                 onClick={onHarvest}
                 disabled={harvestPending}
               >
-                <Icon icon="it-refresh" size="sm" className="me-1" />
-                Harvest
+                <Icon icon="it-refresh" size="sm" />
               </Button>
-              <Button size="xs" color="danger" outline onClick={onDelete} disabled={deletePending}>
+              <Button
+                size="xs"
+                color="danger"
+                outline
+                title="Elimina repository"
+                aria-label="Elimina repository"
+                onClick={onDelete}
+                disabled={deletePending}
+              >
                 <Icon icon="it-delete" size="sm" />
               </Button>
             </>
           )}
-        </td>
-      </tr>
-      {expanded && (
-        <tr>
-          <td colSpan={6} className="admin-expanded-cell">
-            <RepoDetail repoId={repo.id} />
-          </td>
-        </tr>
-      )}
-    </>
-  )
-}
-
-function RepoDetail({ repoId }: { repoId: string }) {
-  const config = useRepoConfig(repoId)
-  const [report, setReport] = useState<string | null>(null)
-  const [reportError, setReportError] = useState<string | null>(null)
-
-  const loadReport = async () => {
-    setReport(null)
-    setReportError(null)
-    try {
-      const r = await RepositoryService.validationReport(repoId)
-      setReport(r)
-    } catch (e) {
-      setReportError(String(e))
-    }
-  }
-
-  return (
-    <div className="row g-3 admin-detail-panel p-3">
-      <div className="col-md-6">
-        <h6>Config</h6>
-        {config.isLoading && <p className="small text-secondary">Caricamento…</p>}
-        {config.isError && <p className="small text-danger">Errore nel recupero della config.</p>}
-        {config.data && Object.keys(config.data).length === 0 && (
-          <p className="small text-secondary">Nessuna chiave di configurazione.</p>
-        )}
-        {config.data && Object.keys(config.data).length > 0 && (
-          <table className="table table-sm mb-0 admin-table">
-            <thead>
-              <tr>
-                <th>Chiave</th>
-                <th>Valore</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(config.data).map(([k, v]) => (
-                <tr key={k}>
-                  <td>
-                    <code>{k}</code>
-                  </td>
-                  <td>
-                    <code>{JSON.stringify(v.value)}</code>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      <div className="col-md-6">
-        <h6>Validation report</h6>
-        <Button color="primary" outline size="xs" onClick={loadReport}>
-          <Icon icon="it-download" size="sm" className="me-1" />
-          Carica ultimo report
-        </Button>
-        {reportError && <p className="small text-danger mt-2 mb-0">{reportError}</p>}
-        {report && (
-          <pre
-            className="admin-code-block p-2 small mt-2 mb-0"
-            style={{ maxHeight: 240, overflow: 'auto' }}
-          >
-            {report}
-          </pre>
-        )}
-      </div>
-    </div>
+        </div>
+      </td>
+    </tr>
   )
 }

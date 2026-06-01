@@ -1,83 +1,122 @@
 package it.gov.innovazione.ndc.admin.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.net.URI;
+import java.io.IOException;
+import java.util.Enumeration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
 
 /**
  * Reverse proxy verso il BE NDC.
- * Tutte le request a /bff/api/** (tranne /bff/api/me) vengono inoltrate al BE,
- * preservando method, path (dopo /bff/api), query string, body e content-type.
- * Il bearer JWT viene aggiunto automaticamente dal WebClient OAuth2-aware.
  *
- * Body request e response sono trasferiti in streaming via Flux<DataBuffer>
- * per evitare di caricare in memoria upload o response di grandi dimensioni
- * (utile per /validate/syntax con file RDF o per /harvest/vocabularies.db).
+ * <p>Tutte le request a /bff/api/** (tranne /bff/api/me) vengono inoltrate al
+ * BE preservando method, path (dopo /bff/api), query string, body e
+ * content-type. Il bearer JWT viene aggiunto qui sopra dal token estratto
+ * dall'{@link OAuth2AuthorizedClient} di sessione.
+ *
+ * <p>Implementazione blocking via {@link RestClient}: body request e response
+ * sono materializzati in memoria come {@code byte[]}. Upload e download grossi
+ * (es. /validate/syntax con file RDF, /harvest/vocabularies.db) restano nel
+ * regime di alcuni MB - decine di MB: gestibile senza streaming.
+ *
+ * <p>In risposta forwardiamo solo {@code Content-Type} e
+ * {@code Content-Disposition}: tutto il resto (cache headers, security
+ * headers, transfer encoding) lo gestisce il BFF stesso. Evita header
+ * duplicati che altrimenti si sommerebbero a quelli che il BFF aggiunge gia'
+ * di suo.
  */
 @RestController
 @RequestMapping("/bff/api")
 @RequiredArgsConstructor
+@Slf4j
 public class ProxyController {
 
     private static final String PREFIX = "/bff/api";
-    private static final DefaultDataBufferFactory BUFFER_FACTORY = new DefaultDataBufferFactory();
 
-    private final WebClient backendWebClient;
+    private final RestClient backendRestClient;
 
     @RequestMapping("/**")
-    public Mono<ResponseEntity<Flux<DataBuffer>>> proxy(HttpServletRequest request) {
+    public ResponseEntity<byte[]> proxy(
+            HttpServletRequest request,
+            @RegisteredOAuth2AuthorizedClient("keycloak") OAuth2AuthorizedClient authorizedClient)
+            throws IOException {
+
         String path = request.getRequestURI().substring(PREFIX.length());
         String query = request.getQueryString();
-        URI uri = URI.create(path + (query != null ? "?" + query : ""));
-
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
+        String bearerToken = authorizedClient.getAccessToken().getTokenValue();
 
-        WebClient.RequestBodySpec spec =
-                backendWebClient.method(method).uri(uri).headers(headers -> copyForwardableHeaders(request, headers));
+        log.debug("[proxy] {} {}{}", method, path, query != null ? "?" + query : "");
 
-        if (method == HttpMethod.GET || method == HttpMethod.DELETE || method == HttpMethod.HEAD) {
-            return spec.exchangeToMono(this::toResponseEntity);
+        RestClient.RequestBodySpec spec = backendRestClient
+                .method(method)
+                .uri(uriBuilder -> {
+                    uriBuilder.path(path);
+                    if (query != null) {
+                        uriBuilder.query(query);
+                    }
+                    return uriBuilder.build();
+                })
+                .headers(headers -> {
+                    headers.setBearerAuth(bearerToken);
+                    copyForwardableRequestHeaders(request, headers);
+                });
+
+        if (hasRequestBody(method)) {
+            byte[] bodyBytes = request.getInputStream().readAllBytes();
+            if (bodyBytes.length > 0) {
+                spec.body(bodyBytes);
+            }
         }
 
-        // Streaming del body request: legge l'InputStream del servlet come Flux<DataBuffer>
-        // senza materializzare l'intero payload in un byte[].
-        Flux<DataBuffer> bodyFlux = DataBufferUtils.readInputStream(request::getInputStream, BUFFER_FACTORY, 8192);
-
-        return spec.body(BodyInserters.fromDataBuffers(bodyFlux)).exchangeToMono(this::toResponseEntity);
+        ResponseEntity<byte[]> upstream = spec.retrieve().toEntity(byte[].class);
+        return forwardResponse(upstream);
     }
 
-    private void copyForwardableHeaders(HttpServletRequest request, HttpHeaders headers) {
-        var names = request.getHeaderNames();
+    private static boolean hasRequestBody(HttpMethod method) {
+        return method != HttpMethod.GET
+                && method != HttpMethod.HEAD
+                && method != HttpMethod.DELETE
+                && method != HttpMethod.OPTIONS;
+    }
+
+    private static ResponseEntity<byte[]> forwardResponse(ResponseEntity<byte[]> upstream) {
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(upstream.getStatusCode());
+        MediaType contentType = upstream.getHeaders().getContentType();
+        if (contentType != null) {
+            builder.contentType(contentType);
+        }
+        String contentDisposition = upstream.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition != null) {
+            builder.header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition);
+        }
+        return builder.body(upstream.getBody());
+    }
+
+    private static void copyForwardableRequestHeaders(HttpServletRequest request, HttpHeaders headers) {
+        Enumeration<String> names = request.getHeaderNames();
         while (names.hasMoreElements()) {
             String name = names.nextElement();
-            // Authorization viene aggiunto dal filter OAuth2 del WebClient.
-            // Host/Cookie/Content-Length non vanno propagati.
+            // Authorization riscritto dal proxy; Host/Cookie/Content-Length non
+            // vanno propagati; Accept-Encoding rimosso per evitare risposte
+            // gzippate che andremmo a forwardare senza decomprimere.
             if (name.equalsIgnoreCase(HttpHeaders.AUTHORIZATION)
                     || name.equalsIgnoreCase(HttpHeaders.HOST)
                     || name.equalsIgnoreCase(HttpHeaders.COOKIE)
-                    || name.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
+                    || name.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)
+                    || name.equalsIgnoreCase(HttpHeaders.ACCEPT_ENCODING)) {
                 continue;
             }
             headers.add(name, request.getHeader(name));
         }
-    }
-
-    private Mono<ResponseEntity<Flux<DataBuffer>>> toResponseEntity(
-            org.springframework.web.reactive.function.client.ClientResponse clientResponse) {
-        return Mono.just(ResponseEntity.status(clientResponse.statusCode())
-                .headers(clientResponse.headers().asHttpHeaders())
-                .body(clientResponse.bodyToFlux(DataBuffer.class)));
     }
 }

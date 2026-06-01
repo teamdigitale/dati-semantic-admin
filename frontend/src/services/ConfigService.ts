@@ -1,7 +1,10 @@
 import { NdcClient } from '../api/NdcClient'
 import type { RepoConfig } from '../api/types/config'
+import type { ConfigKeyMetadata } from '../api/types/configMetadata'
 
 export const ConfigService = {
+  metadata: () => NdcClient.get<ConfigKeyMetadata[]>('/config/metadata'),
+
   get: (repoId: string) => NdcClient.get<RepoConfig>(`/config/${repoId}`),
 
   set: (repoId: string, body: Record<string, unknown>) =>

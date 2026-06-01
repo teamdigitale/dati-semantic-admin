@@ -7,6 +7,7 @@ import RepositoriesPage from './pages/RepositoriesPage'
 import HarvestPage from './pages/HarvestPage'
 import AuditPage from './pages/AuditPage'
 import ValidatePage from './pages/ValidatePage'
+import SystemConfigPage from './pages/SystemConfigPage'
 
 export default function App() {
   const me = useMe()
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/harvest" element={<HarvestPage />} />
         <Route path="/audit" element={<AuditPage />} />
         <Route path="/validate" element={<ValidatePage />} />
+        <Route path="/system-config" element={<SystemConfigPage />} />
       </Routes>
     </AppLayout>
   )

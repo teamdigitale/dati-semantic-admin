@@ -2,6 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ConfigService } from '../services/ConfigService'
 import { queryKeys } from './queryKeys'
 
+export function useConfigMetadata() {
+  return useQuery({
+    queryKey: queryKeys.configMetadata,
+    queryFn: ConfigService.metadata,
+    // I metadata sono dati statici per la durata del runtime BE: niente refetch
+    // automatico su window focus / mount.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  })
+}
+
 export function useRepoConfig(repoId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.repositoryConfig(repoId ?? '_'),
