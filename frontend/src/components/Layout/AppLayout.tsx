@@ -40,8 +40,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const close = () => setOpen(false)
 
   return (
-    <>
-      <Headers>
+    <div className="admin-shell">
+      <Headers className="admin-topbar">
         <Header type="center" theme="">
           <HeaderContent>
             <div className="d-flex align-items-center">
@@ -53,7 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               >
                 <Icon icon={open ? 'it-close' : 'it-burger'} color="white" size="lg" />
               </Button>
-              <HeaderBrand iconName="it-pa">
+              <HeaderBrand iconName="it-pa" className="admin-brand">
                 <h2>NDC Admin</h2>
                 <h3>National Data Catalog</h3>
               </HeaderBrand>
@@ -61,7 +61,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <HeaderRightZone>
               <div className="d-flex align-items-center gap-3 me-3 text-white">
                 {me.data && (
-                  <span className="d-none d-sm-inline">
+                  <span className="admin-user-chip d-none d-sm-inline">
                     <Icon icon="it-user" size="sm" className="me-2" color="white" />
                     {me.data.name}
                   </span>
@@ -78,10 +78,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       <Container fluid className="px-0">
         <div className="row g-0">
           <aside
-            className={`col-12 col-md-3 col-lg-2 border-end bg-light ${
+            className={`admin-sidebar col-12 col-md-3 col-lg-2 ${
               open ? 'd-block' : 'd-none d-md-block'
             }`}
-            style={{ minHeight: 'calc(100vh - 120px)' }}
           >
             <Sidebar>
               <div className="link-list-wrapper">
@@ -107,9 +106,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             </Sidebar>
           </aside>
-          <main className="col-12 col-md-9 col-lg-10 p-4">{children}</main>
+          <main className="admin-main col-12 col-md-9 col-lg-10">{children}</main>
         </div>
       </Container>
-    </>
+    </div>
   )
 }
