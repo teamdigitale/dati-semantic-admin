@@ -1,32 +1,52 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Card, CardBody, CardTitle, Icon, Row, Col } from 'design-react-kit'
 import { useRepositories } from '../hooks/useRepositories'
-import { useChangelog, useLatestDelta, useLatestDeltaSummary } from '../hooks/useAudit'
+import { useChangelog, useRunDelta, useRunDeltaSummary } from '../hooks/useAudit'
+import { useHarvestRuns } from '../hooks/useHarvest'
 import DeltaDetailModal, { type DeltaDetailPayload } from '../components/DeltaDetailModal'
 import IriSearchInput from '../components/IriSearchInput'
 import Pagination from '../components/Pagination'
 import AssetTypeBadge from '../components/AssetTypeBadge'
 import type { Repository } from '../api/types/repository'
+import type { HarvesterRun } from '../api/types/harvest'
 
 type DetailContext = { kind: 'delta' | 'changelog'; index: number } | null
+type ActiveRunCtx = { repoId: string; runId: string } | null
 
 const PAGE_SIZE = 10
 
 export default function AuditPage() {
   const repos = useRepositories()
+  const allRuns = useHarvestRuns()
   const [selectedRepoId, setSelectedRepoId] = useState<string>('')
+  const [selectedRunId, setSelectedRunId] = useState<string>('')
+  const [activeRun, setActiveRun] = useState<ActiveRunCtx>(null)
   const [iriInput, setIriInput] = useState<string>('')
   const [activeIri, setActiveIri] = useState<string>('')
   const [deltaPage, setDeltaPage] = useState(0)
   const [changelogPage, setChangelogPage] = useState(0)
   const [deltaFilter, setDeltaFilter] = useState('')
 
-  // Reset paginazione quando cambia repo / asset.
-  useEffect(() => setDeltaPage(0), [selectedRepoId])
+  // Runs del repo selezionato, ordinati per data DESC (piu' recente prima).
+  const runsForRepo = useMemo<HarvesterRun[]>(() => {
+    if (!selectedRepoId || !allRuns.data) return []
+    return [...allRuns.data]
+      .filter((r) => r.repositoryId === selectedRepoId)
+      .sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''))
+  }, [allRuns.data, selectedRepoId])
+
+  // Quando cambia repo: reset run selezionato all'ultimo, scarta activeRun.
+  useEffect(() => {
+    setSelectedRunId(runsForRepo[0]?.id ?? '')
+    setActiveRun(null)
+    setDeltaPage(0)
+  }, [selectedRepoId, runsForRepo])
+
+  // Reset paginazione changelog quando cambia IRI.
   useEffect(() => setChangelogPage(0), [activeIri])
 
-  const summary = useLatestDeltaSummary(selectedRepoId || undefined)
-  const delta = useLatestDelta(selectedRepoId || undefined, {
+  const summary = useRunDeltaSummary(activeRun?.repoId, activeRun?.runId)
+  const delta = useRunDelta(activeRun?.repoId, activeRun?.runId, {
     offset: deltaPage * PAGE_SIZE,
     limit: PAGE_SIZE,
   })
@@ -98,20 +118,20 @@ export default function AuditPage() {
         <div>
           <h1 className="admin-page-title">Audit</h1>
           <p className="admin-page-subtitle">
-            Delta semantico per repository (ultimo run) e changelog per singolo asset (cross-repo).
+            Delta semantico di uno specifico run e changelog per singolo asset (cross-repo).
           </p>
         </div>
       </div>
 
-      {/* --- Delta per repository (ultimo run) --- */}
+      {/* --- Delta per repository (run scelto dall'utente) --- */}
       <Card className="admin-card mb-4">
         <CardBody className="admin-card-body">
           <CardTitle tag="h5" className="admin-card-title">
             <Icon icon="it-folder" size="sm" />
-            Delta dell'ultimo run
+            Delta di un run
           </CardTitle>
           <Row className="g-3 align-items-end mb-3">
-            <Col md={6}>
+            <Col md={5}>
               <label htmlFor="repo-select" className="form-label small">
                 Repository
               </label>
@@ -129,10 +149,47 @@ export default function AuditPage() {
                 ))}
               </select>
             </Col>
+            <Col md={5}>
+              <label htmlFor="run-select" className="form-label small">
+                Run
+              </label>
+              <select
+                id="run-select"
+                className="form-select"
+                value={selectedRunId}
+                onChange={(e) => setSelectedRunId(e.target.value)}
+                disabled={!selectedRepoId || runsForRepo.length === 0}
+              >
+                {!selectedRepoId && <option value="">— Seleziona prima un repository —</option>}
+                {selectedRepoId && allRuns.isLoading && <option value="">Caricamento run…</option>}
+                {selectedRepoId && !allRuns.isLoading && runsForRepo.length === 0 && (
+                  <option value="">Nessun run per questo repository</option>
+                )}
+                {runsForRepo.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {formatRunLabel(r)}
+                  </option>
+                ))}
+              </select>
+            </Col>
+            <Col md={2}>
+              <Button
+                color="primary"
+                outline
+                disabled={!selectedRepoId || !selectedRunId}
+                onClick={() => setActiveRun({ repoId: selectedRepoId, runId: selectedRunId })}
+              >
+                <Icon icon="it-search" size="sm" className="me-2" />
+                Carica delta
+              </Button>
+            </Col>
           </Row>
 
-          {selectedRepoId && summary.isLoading && <p>Caricamento summary…</p>}
-          {selectedRepoId && summary.data && (
+          {!activeRun && (
+            <p className="admin-empty">Seleziona repository e run, poi premi "Carica delta".</p>
+          )}
+          {activeRun && summary.isLoading && <p>Caricamento summary…</p>}
+          {activeRun && summary.data && (
             <div className="mb-3">
               <h6>Summary</h6>
               <Row className="g-2">
@@ -148,7 +205,7 @@ export default function AuditPage() {
             </div>
           )}
 
-          {selectedRepoId && delta.data && delta.data.content.length > 0 && (
+          {activeRun && delta.data && delta.data.content.length > 0 && (
             <>
               <Row className="g-2 align-items-end mb-2">
                 <Col md={6}>
@@ -225,8 +282,8 @@ export default function AuditPage() {
               />
             </>
           )}
-          {selectedRepoId && delta.data && delta.data.content.length === 0 && (
-            <p className="admin-empty">Nessuna modifica nell'ultimo run.</p>
+          {activeRun && delta.data && delta.data.content.length === 0 && (
+            <p className="admin-empty">Nessuna modifica in questo run.</p>
           )}
         </CardBody>
       </Card>
@@ -365,6 +422,24 @@ export default function AuditPage() {
       />
     </section>
   )
+}
+
+/**
+ * Etichetta utente-friendly per un run nella dropdown: solo data-ora locale + status.
+ * Niente runId (tecnico, non interessa l'utente).
+ */
+function formatRunLabel(run: HarvesterRun): string {
+  const when = run.startedAt
+    ? new Date(run.startedAt).toLocaleString('it-IT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    : 'data ignota'
+  return `${when} — ${run.status}`
 }
 
 function RepoCell({ repoId, repo }: { repoId: string; repo: Repository | undefined }) {

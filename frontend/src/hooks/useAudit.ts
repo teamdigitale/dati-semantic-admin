@@ -23,6 +23,27 @@ export function useLatestDeltaSummary(repositoryId: string | undefined) {
   })
 }
 
+export function useRunDelta(
+  repositoryId: string | undefined,
+  runId: string | undefined,
+  opts: { offset?: number; limit?: number } = {}
+) {
+  return useQuery({
+    queryKey: ['audit', 'runDelta', repositoryId ?? '_', runId ?? '_', opts.offset, opts.limit],
+    queryFn: () =>
+      AuditService.runDelta(repositoryId!, runId!, { offset: opts.offset, limit: opts.limit }),
+    enabled: !!repositoryId && !!runId,
+  })
+}
+
+export function useRunDeltaSummary(repositoryId: string | undefined, runId: string | undefined) {
+  return useQuery({
+    queryKey: ['audit', 'runDeltaSummary', repositoryId ?? '_', runId ?? '_'],
+    queryFn: () => AuditService.runDeltaSummary(repositoryId!, runId!),
+    enabled: !!repositoryId && !!runId,
+  })
+}
+
 export function useChangelog(iri: string | undefined, offset = 0, limit = 20) {
   return useQuery({
     queryKey: queryKeys.changelog(iri ?? '', offset, limit),
