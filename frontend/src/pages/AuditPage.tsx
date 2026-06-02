@@ -5,11 +5,12 @@ import { useChangelog, useLatestDelta, useLatestDeltaSummary } from '../hooks/us
 import DeltaDetailModal, { type DeltaDetailPayload } from '../components/DeltaDetailModal'
 import IriSearchInput from '../components/IriSearchInput'
 import Pagination from '../components/Pagination'
+import AssetTypeBadge from '../components/AssetTypeBadge'
 import type { Repository } from '../api/types/repository'
 
 type DetailContext = { kind: 'delta' | 'changelog'; index: number } | null
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 10
 
 export default function AuditPage() {
   const repos = useRepositories()
@@ -18,6 +19,7 @@ export default function AuditPage() {
   const [activeIri, setActiveIri] = useState<string>('')
   const [deltaPage, setDeltaPage] = useState(0)
   const [changelogPage, setChangelogPage] = useState(0)
+  const [deltaFilter, setDeltaFilter] = useState('')
 
   // Reset paginazione quando cambia repo / asset.
   useEffect(() => setDeltaPage(0), [selectedRepoId])
@@ -37,10 +39,22 @@ export default function AuditPage() {
     return map
   }, [repos.data])
 
+  // Filtro client-side della pagina corrente del delta. Si applica a IRI e
+  // assetType (case-insensitive); nav del detail modal opera sulla lista filtrata.
+  const filteredDeltaItems = useMemo(() => {
+    if (!delta.data) return []
+    const q = deltaFilter.trim().toLowerCase()
+    if (!q) return delta.data.content
+    return delta.data.content.filter(
+      (item) =>
+        item.assetIri.toLowerCase().includes(q) || (item.assetType ?? '').toLowerCase().includes(q)
+    )
+  }, [delta.data, deltaFilter])
+
   const detailItem = useMemo<DeltaDetailPayload | null>(() => {
     if (!detailCtx) return null
     if (detailCtx.kind === 'delta') {
-      return delta.data?.content[detailCtx.index] ?? null
+      return filteredDeltaItems[detailCtx.index] ?? null
     }
     if (!changelog.data) return null
     const entry = changelog.data.content[detailCtx.index]
@@ -52,11 +66,11 @@ export default function AuditPage() {
       createdAt: entry.createdAt,
       summary: entry.summary,
     }
-  }, [detailCtx, delta.data, changelog.data])
+  }, [detailCtx, filteredDeltaItems, changelog.data])
 
   const detailListLen = detailCtx
     ? detailCtx.kind === 'delta'
-      ? (delta.data?.content.length ?? 0)
+      ? filteredDeltaItems.length
       : (changelog.data?.content.length ?? 0)
     : 0
 
@@ -136,12 +150,27 @@ export default function AuditPage() {
 
           {selectedRepoId && delta.data && delta.data.content.length > 0 && (
             <>
+              <Row className="g-2 align-items-end mb-2">
+                <Col md={6}>
+                  <label htmlFor="delta-filter" className="form-label small">
+                    Filtro pagina
+                  </label>
+                  <input
+                    id="delta-filter"
+                    type="search"
+                    className="form-control form-control-sm"
+                    placeholder="Filtra per IRI o tipo asset…"
+                    value={deltaFilter}
+                    onChange={(e) => setDeltaFilter(e.target.value)}
+                  />
+                </Col>
+              </Row>
               <div className="table-responsive">
                 <table className="table table-hover table-sm mb-0 admin-table">
                   <thead>
                     <tr>
+                      <th style={{ width: 56 }}>Tipo</th>
                       <th>Asset IRI</th>
-                      <th>Tipo</th>
                       <th>Cambio</th>
                       <th>Quando</th>
                       <th className="text-end" style={{ width: 80 }}>
@@ -150,12 +179,14 @@ export default function AuditPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {delta.data.content.map((item, index) => (
+                    {filteredDeltaItems.map((item, index) => (
                       <tr key={item.assetIri + item.harvesterRunId}>
+                        <td>
+                          <AssetTypeBadge type={item.assetType} />
+                        </td>
                         <td className="text-truncate" style={{ maxWidth: 360 }}>
                           <code>{item.assetIri}</code>
                         </td>
-                        <td>{item.assetType}</td>
                         <td>
                           <span className="badge bg-info">{item.changeKind}</span>
                         </td>
@@ -176,6 +207,13 @@ export default function AuditPage() {
                         </td>
                       </tr>
                     ))}
+                    {filteredDeltaItems.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted small py-3">
+                          Nessuna riga nella pagina corrente combacia con "{deltaFilter}".
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
