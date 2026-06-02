@@ -92,9 +92,7 @@ export default function IriSearchInput({
                     }}
                   >
                     <div className="d-flex align-items-center gap-2">
-                      <span className="iri-suggestion-title">
-                        {item.title ?? item.assetIri}
-                      </span>
+                      <span className="iri-suggestion-title">{item.title ?? item.assetIri}</span>
                       {item.type && (
                         <span className="badge bg-light text-muted iri-suggestion-type">
                           {item.type}
@@ -124,10 +122,7 @@ export default function IriSearchInput({
  * segmento di IRI, ordinati da equals > startsWith > contains; lascio dietro
  * l'ordine originale di ES.
  */
-function rerankByLocalMatch(
-  items: SearchResultItem[],
-  rawQuery: string,
-): SearchResultItem[] {
+function rerankByLocalMatch(items: SearchResultItem[], rawQuery: string): SearchResultItem[] {
   const q = rawQuery.trim().toLowerCase()
   if (!q) return items
   return [...items].sort((a, b) => matchScore(a, q) - matchScore(b, q))

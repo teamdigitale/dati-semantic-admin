@@ -1,22 +1,34 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button, Card, CardBody, CardTitle, Icon, Row, Col } from 'design-react-kit'
 import { useRepositories } from '../hooks/useRepositories'
 import { useChangelog, useLatestDelta, useLatestDeltaSummary } from '../hooks/useAudit'
 import DeltaDetailModal, { type DeltaDetailPayload } from '../components/DeltaDetailModal'
 import IriSearchInput from '../components/IriSearchInput'
+import Pagination from '../components/Pagination'
 import type { Repository } from '../api/types/repository'
 
 type DetailContext = { kind: 'delta' | 'changelog'; index: number } | null
+
+const PAGE_SIZE = 25
 
 export default function AuditPage() {
   const repos = useRepositories()
   const [selectedRepoId, setSelectedRepoId] = useState<string>('')
   const [iriInput, setIriInput] = useState<string>('')
   const [activeIri, setActiveIri] = useState<string>('')
+  const [deltaPage, setDeltaPage] = useState(0)
+  const [changelogPage, setChangelogPage] = useState(0)
+
+  // Reset paginazione quando cambia repo / asset.
+  useEffect(() => setDeltaPage(0), [selectedRepoId])
+  useEffect(() => setChangelogPage(0), [activeIri])
 
   const summary = useLatestDeltaSummary(selectedRepoId || undefined)
-  const delta = useLatestDelta(selectedRepoId || undefined, { limit: 20 })
-  const changelog = useChangelog(activeIri || undefined, 0, 20)
+  const delta = useLatestDelta(selectedRepoId || undefined, {
+    offset: deltaPage * PAGE_SIZE,
+    limit: PAGE_SIZE,
+  })
+  const changelog = useChangelog(activeIri || undefined, changelogPage * PAGE_SIZE, PAGE_SIZE)
   const [detailCtx, setDetailCtx] = useState<DetailContext>(null)
 
   const repoById = useMemo<Map<string, Repository>>(() => {
@@ -54,8 +66,12 @@ export default function AuditPage() {
     const hasPrev = detailCtx.index < detailListLen - 1
     const hasNext = detailCtx.index > 0
     return {
-      onPrev: hasPrev ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index + 1 }) : undefined,
-      onNext: hasNext ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index - 1 }) : undefined,
+      onPrev: hasPrev
+        ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index + 1 })
+        : undefined,
+      onNext: hasNext
+        ? () => setDetailCtx({ ...detailCtx, index: detailCtx.index - 1 })
+        : undefined,
     }
   }, [detailCtx, detailListLen])
 
@@ -119,47 +135,57 @@ export default function AuditPage() {
           )}
 
           {selectedRepoId && delta.data && delta.data.content.length > 0 && (
-            <div className="table-responsive">
-              <table className="table table-hover table-sm mb-0 admin-table">
-                <thead>
-                  <tr>
-                    <th>Asset IRI</th>
-                    <th>Tipo</th>
-                    <th>Cambio</th>
-                    <th>Quando</th>
-                    <th className="text-end" style={{ width: 80 }}>
-                      Azioni
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {delta.data.content.map((item, index) => (
-                    <tr key={item.assetIri + item.harvesterRunId}>
-                      <td className="text-truncate" style={{ maxWidth: 360 }}>
-                        <code>{item.assetIri}</code>
-                      </td>
-                      <td>{item.assetType}</td>
-                      <td>
-                        <span className="badge bg-info">{item.changeKind}</span>
-                      </td>
-                      <td className="small">{new Date(item.createdAt).toLocaleString('it-IT')}</td>
-                      <td className="text-end">
-                        <Button
-                          size="xs"
-                          color="secondary"
-                          outline
-                          title="Dettaglio modifiche"
-                          aria-label="Dettaglio modifiche"
-                          onClick={() => setDetailCtx({ kind: 'delta', index })}
-                        >
-                          <Icon icon="it-zoom-in" size="sm" />
-                        </Button>
-                      </td>
+            <>
+              <div className="table-responsive">
+                <table className="table table-hover table-sm mb-0 admin-table">
+                  <thead>
+                    <tr>
+                      <th>Asset IRI</th>
+                      <th>Tipo</th>
+                      <th>Cambio</th>
+                      <th>Quando</th>
+                      <th className="text-end" style={{ width: 80 }}>
+                        Azioni
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {delta.data.content.map((item, index) => (
+                      <tr key={item.assetIri + item.harvesterRunId}>
+                        <td className="text-truncate" style={{ maxWidth: 360 }}>
+                          <code>{item.assetIri}</code>
+                        </td>
+                        <td>{item.assetType}</td>
+                        <td>
+                          <span className="badge bg-info">{item.changeKind}</span>
+                        </td>
+                        <td className="small">
+                          {new Date(item.createdAt).toLocaleString('it-IT')}
+                        </td>
+                        <td className="text-end">
+                          <Button
+                            size="xs"
+                            color="secondary"
+                            outline
+                            title="Dettaglio modifiche"
+                            aria-label="Dettaglio modifiche"
+                            onClick={() => setDetailCtx({ kind: 'delta', index })}
+                          >
+                            <Icon icon="it-zoom-in" size="sm" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination
+                page={deltaPage}
+                pageSize={PAGE_SIZE}
+                total={delta.data.total}
+                onPageChange={setDeltaPage}
+              />
+            </>
           )}
           {selectedRepoId && delta.data && delta.data.content.length === 0 && (
             <p className="admin-empty">Nessuna modifica nell'ultimo run.</p>
@@ -246,7 +272,10 @@ export default function AuditPage() {
                     {changelog.data.content.map((entry, index) => (
                       <tr key={entry.runId + entry.createdAt}>
                         <td>
-                          <RepoCell repoId={entry.repositoryId} repo={repoById.get(entry.repositoryId)} />
+                          <RepoCell
+                            repoId={entry.repositoryId}
+                            repo={repoById.get(entry.repositoryId)}
+                          />
                         </td>
                         <td>
                           <code>{entry.revision ?? '—'}</code>
@@ -277,6 +306,12 @@ export default function AuditPage() {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                page={changelogPage}
+                pageSize={PAGE_SIZE}
+                total={changelog.data.total}
+                onPageChange={setChangelogPage}
+              />
             </>
           )}
         </CardBody>
