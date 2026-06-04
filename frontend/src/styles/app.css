@@ -739,3 +739,754 @@ body {
   padding: 0;
   color: inherit;
 }
+
+/* ============================================================
+ * MODERN THEME OVERRIDES — XXI sec look-and-feel.
+ *
+ * Tutto in fondo al file per essere applicato per ultimo. Tocca:
+ *  - radius dei contenitori (cards, table-wrapper, buttons, input, badge);
+ *  - ombre piu' "lifted" (multi-stop) e piu' soft;
+ *  - background con tint blu freddo + gradient morbido;
+ *  - micro-transition su hover/focus;
+ *  - typography (weight + tracking).
+ *
+ * Nessuna riga sotto modifica markup; layout/spacing pre-esistenti restano.
+ * ============================================================ */
+
+:root {
+  --admin-radius-sm: 10px;
+  --admin-radius-md: 14px;
+  --admin-radius-lg: 18px;
+  --admin-radius-xl: 24px;
+  --admin-radius-pill: 999px;
+
+  --admin-shadow-xs: 0 1px 2px rgba(20, 45, 90, 0.04);
+  --admin-shadow-sm:
+    0 1px 2px rgba(20, 45, 90, 0.04), 0 2px 6px rgba(20, 45, 90, 0.045);
+  --admin-shadow-md:
+    0 1px 2px rgba(20, 45, 90, 0.05), 0 4px 12px rgba(20, 45, 90, 0.06),
+    0 12px 28px rgba(20, 45, 90, 0.06);
+  --admin-shadow-lg:
+    0 2px 4px rgba(20, 45, 90, 0.06), 0 8px 18px rgba(20, 45, 90, 0.07),
+    0 24px 48px rgba(20, 45, 90, 0.09);
+  --admin-shadow-focus: 0 0 0 3px rgba(0, 102, 204, 0.18);
+
+  --admin-accent: #0066cc;
+  --admin-accent-soft: rgba(0, 102, 204, 0.08);
+  --admin-text: #14233b;
+  --admin-text-soft: #4a5b73;
+
+  --admin-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --admin-motion: 180ms;
+}
+
+body {
+  background: #f3f6fb;
+  color: var(--admin-text);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Background: gradient piu' morbido, "ambient light" diffusa ---- */
+.admin-shell {
+  background:
+    radial-gradient(1200px 480px at 12% -10%, rgba(0, 102, 204, 0.1), transparent 60%),
+    radial-gradient(900px 420px at 100% -5%, rgba(82, 124, 196, 0.08), transparent 60%),
+    linear-gradient(180deg, #eef3fb 0%, #f3f6fb 320px) !important;
+}
+
+/* ---- Sidebar: superficie traslucida + radius interno marcato ---- */
+.admin-sidebar {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  border-right-color: rgba(217, 226, 238, 0.7) !important;
+  box-shadow: 8px 0 28px rgba(20, 45, 90, 0.04) !important;
+}
+
+.admin-sidebar .link-list-wrapper ul li a.list-item {
+  border-radius: var(--admin-radius-md) !important;
+  transition:
+    background var(--admin-motion) var(--admin-easing),
+    color var(--admin-motion) var(--admin-easing),
+    transform var(--admin-motion) var(--admin-easing);
+}
+
+.admin-sidebar .link-list-wrapper ul li a.list-item:hover {
+  background: var(--admin-accent-soft) !important;
+  transform: translateX(2px);
+}
+
+.admin-sidebar .link-list-wrapper ul li a.list-item.active {
+  background: linear-gradient(135deg, #0066cc, #2486e0) !important;
+  box-shadow:
+    0 6px 14px rgba(0, 102, 204, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ---- Cards: radius molto piu' morbido, ombra "lifted" multi-stop ---- */
+.admin-main .card,
+.admin-card.card,
+.admin-stat-card.card {
+  border-radius: var(--admin-radius-lg) !important;
+  border-color: rgba(217, 226, 238, 0.7) !important;
+  box-shadow: var(--admin-shadow-md) !important;
+  transition:
+    box-shadow var(--admin-motion) var(--admin-easing),
+    transform var(--admin-motion) var(--admin-easing);
+}
+
+.admin-stat-card.card:hover {
+  box-shadow: var(--admin-shadow-lg) !important;
+  transform: translateY(-2px);
+}
+
+/* ---- Stat icons: radius piu' generoso, niente inset glow scuro ---- */
+.admin-stat-icon {
+  border-radius: var(--admin-radius-md) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 14px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ---- Tabelle: wrapper rounded che clippa anche corner thead ---- */
+.admin-main .table-responsive {
+  border-radius: var(--admin-radius-md) !important;
+  border-color: rgba(217, 226, 238, 0.7) !important;
+  overflow: hidden;
+}
+
+.admin-main .table thead th {
+  background: linear-gradient(180deg, #f7faff 0%, #f1f5fb 100%) !important;
+  border-bottom-color: rgba(217, 226, 238, 0.6) !important;
+}
+
+.admin-main .table tbody tr {
+  transition: background var(--admin-motion) var(--admin-easing);
+}
+
+.admin-main .table.table-hover tbody tr:hover {
+  background-color: var(--admin-accent-soft) !important;
+}
+
+/* ---- Buttons: radius generoso + micro-feedback ---- */
+.btn,
+.admin-main .btn {
+  border-radius: var(--admin-radius-sm) !important;
+  transition:
+    background var(--admin-motion) var(--admin-easing),
+    box-shadow var(--admin-motion) var(--admin-easing),
+    transform 80ms var(--admin-easing);
+}
+
+.btn:active,
+.admin-main .btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary,
+.admin-main .btn-primary {
+  background: linear-gradient(135deg, #0066cc, #2486e0) !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 14px rgba(0, 102, 204, 0.28) !important;
+}
+
+.btn-primary:hover,
+.admin-main .btn-primary:hover {
+  box-shadow: 0 10px 22px rgba(0, 102, 204, 0.36) !important;
+}
+
+.btn-outline-primary,
+.admin-main .btn-outline-primary {
+  border-color: rgba(0, 102, 204, 0.35) !important;
+}
+
+.btn-outline-primary:hover,
+.admin-main .btn-outline-primary:hover {
+  background: var(--admin-accent-soft) !important;
+}
+
+/* Warning: il default Bootstrap Italia (#a66300-ish) e' troppo marrone.
+   Override con un arancione vero. */
+.btn-warning,
+.admin-main .btn-warning {
+  background: linear-gradient(135deg, #f97316, #fb923c) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.28) !important;
+}
+
+.btn-warning:hover,
+.admin-main .btn-warning:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(249, 115, 22, 0.38) !important;
+}
+
+.btn-outline-warning,
+.admin-main .btn-outline-warning {
+  border-color: rgba(249, 115, 22, 0.5) !important;
+  color: #c2410c !important;
+}
+
+.btn-outline-warning:hover,
+.admin-main .btn-outline-warning:hover {
+  background: rgba(249, 115, 22, 0.12) !important;
+  color: #c2410c !important;
+}
+
+/* Warning: override globale del token colore di Bootstrap Italia.
+   Sostituisce il marrone-ocra dovunque appaia (.bg-warning, .text-warning,
+   .badge.bg-warning, .alert-warning, .border-warning, <Badge color="warning">). */
+:root,
+.admin-main,
+.admin-shell {
+  --bs-warning: #f97316;
+  --bs-warning-rgb: 249, 115, 22;
+  --bs-warning-bg-subtle: #fff3e6;
+  --bs-warning-border-subtle: #fbd2a8;
+  --bs-warning-text: #c2410c;
+  --bs-warning-text-emphasis: #9a3412;
+}
+
+.bg-warning,
+.admin-main .bg-warning,
+.badge.bg-warning,
+.admin-main .badge.bg-warning {
+  background-color: #f97316 !important;
+  color: #fff !important;
+}
+
+/* Bootstrap Italia spesso usa "bg-warning text-dark" sui badge:
+   ora che il bg e' arancione vero, il testo bianco e' piu' leggibile. */
+.bg-warning.text-dark,
+.admin-main .bg-warning.text-dark,
+.badge.bg-warning.text-dark {
+  color: #fff !important;
+}
+
+.text-warning,
+.admin-main .text-warning {
+  color: #c2410c !important;
+}
+
+.border-warning,
+.admin-main .border-warning {
+  border-color: #f97316 !important;
+}
+
+.alert-warning,
+.admin-main .alert-warning {
+  background-color: #fff3e6 !important;
+  border-color: #fbd2a8 !important;
+  color: #9a3412 !important;
+}
+
+/* ============================================================
+ * MODERN THEME — GRADIENTS (tamarro-mode: ON)
+ *
+ * Gradient palette ricorrente: blu navy NDC -> ciano -> viola pastello.
+ * Usata in modo coordinato su page title, top-strip dei card, stat
+ * icons/values, badge di stato, topbar, modal header.
+ * ============================================================ */
+
+:root {
+  --grad-aurora: linear-gradient(135deg, #0066cc 0%, #4f8ee5 45%, #a06bff 100%);
+  --grad-aurora-soft: linear-gradient(135deg, rgba(0, 102, 204, 0.12), rgba(160, 107, 255, 0.12));
+  --grad-success: linear-gradient(135deg, #10b981, #34d399);
+  --grad-danger: linear-gradient(135deg, #dc2626, #f87171);
+  --grad-info: linear-gradient(135deg, #0891b2, #38bdf8);
+  --grad-warning: linear-gradient(135deg, #f97316, #fb923c);
+  --grad-violet: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+/* ---- Page title: testo in gradient (Aurora) ---- */
+.admin-page-title,
+.admin-main > section > h1:first-child,
+.admin-main > section > .d-flex:first-child h1,
+.admin-main > section > div:first-child h1 {
+  background: var(--grad-aurora) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ---- Card: top-strip gradient subtile + glow on hover ---- */
+.admin-main .card,
+.admin-card.card {
+  position: relative;
+}
+
+.admin-main .card::before,
+.admin-card.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--grad-aurora);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.admin-main .card:hover::before,
+.admin-card.card:hover::before {
+  opacity: 1;
+}
+
+/* ---- Stat cards: icon ora con gradient pieno + glow colorato ---- */
+.admin-stat-card[data-color='primary'] .admin-stat-icon,
+.admin-stat-icon-primary,
+.admin-stat-card .admin-stat-icon {
+  background: var(--grad-aurora) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px rgba(0, 102, 204, 0.35) !important;
+}
+
+.admin-stat-card[data-color='success'] .admin-stat-icon,
+.admin-stat-icon-success {
+  background: var(--grad-success) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px rgba(16, 185, 129, 0.35) !important;
+}
+
+.admin-stat-card[data-color='danger'] .admin-stat-icon,
+.admin-stat-icon-danger {
+  background: var(--grad-danger) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px rgba(220, 38, 38, 0.35) !important;
+}
+
+.admin-stat-card[data-color='info'] .admin-stat-icon,
+.admin-stat-icon-info {
+  background: var(--grad-info) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px rgba(8, 145, 178, 0.35) !important;
+}
+
+.admin-stat-card[data-color='warning'] .admin-stat-icon,
+.admin-stat-icon-warning {
+  background: var(--grad-warning) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px rgba(249, 115, 22, 0.35) !important;
+}
+
+/* Stat value numerico anche lui in aurora */
+.admin-stat-value {
+  background: var(--grad-aurora) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ---- Summary tile (audit): numero in gradient ---- */
+.admin-summary-tile div {
+  background: var(--grad-aurora) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ---- Badge di stato: gradient pieno ---- */
+.badge.bg-primary,
+.admin-main .badge.bg-primary {
+  background: var(--grad-aurora) !important;
+}
+
+.badge.bg-success,
+.admin-main .badge.bg-success {
+  background: var(--grad-success) !important;
+}
+
+.badge.bg-danger,
+.admin-main .badge.bg-danger {
+  background: var(--grad-danger) !important;
+}
+
+.badge.bg-info,
+.admin-main .badge.bg-info {
+  background: var(--grad-info) !important;
+  color: #fff !important;
+}
+
+.badge.bg-warning,
+.admin-main .badge.bg-warning {
+  background: var(--grad-warning) !important;
+}
+
+/* ---- Topbar: gradient piu' marcato (ndc-aurora) ---- */
+.admin-topbar .it-header-center-wrapper,
+.it-header-center-wrapper {
+  background: linear-gradient(135deg, #03316d 0%, #0066cc 55%, #4d8df0 100%) !important;
+}
+
+/* ---- AssetTypeBadge: rendiamoli a gradient anche loro ---- */
+.badge[title='Ontologia'] {
+  background: var(--grad-aurora) !important;
+}
+
+.badge[title='Vocabolario controllato'] {
+  background: var(--grad-info) !important;
+}
+
+.badge[title='Schema dati'] {
+  background: var(--grad-warning) !important;
+  color: #fff !important;
+}
+
+/* ---- Modal header: separator gradient ---- */
+.modal-content .modal-header,
+.admin-main .modal-content .modal-header {
+  border-bottom: 0 !important;
+  position: relative;
+}
+
+.modal-content .modal-header::after,
+.admin-main .modal-content .modal-header::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0;
+  height: 2px;
+  background: var(--grad-aurora);
+  border-radius: 999px;
+  opacity: 0.6;
+}
+
+/* ---- "Spotlight" radiale dietro al page header ---- */
+.admin-page-header {
+  position: relative;
+}
+
+.admin-page-header::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: -20px;
+  width: 360px;
+  height: 220px;
+  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1), transparent 65%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ============================================================
+ * MODERN THEME — SHADOWS SOFTENING
+ * Tono giu' le ombre multi-stop sui card (erano "lifted" troppo aggressive),
+ * preferendo un'unica ombra diffusa appena percepibile. Stessa cosa estesa
+ * ai box di config / summary / detail panel per coerenza.
+ * ============================================================ */
+
+:root {
+  --admin-shadow-whisper:
+    0 1px 2px rgba(20, 45, 90, 0.035),
+    0 6px 18px rgba(20, 45, 90, 0.05);
+  --admin-shadow-whisper-hover:
+    0 1px 2px rgba(20, 45, 90, 0.04),
+    0 10px 26px rgba(20, 45, 90, 0.07);
+}
+
+.admin-main .card,
+.admin-card.card,
+.admin-stat-card.card {
+  box-shadow: var(--admin-shadow-whisper) !important;
+}
+
+.admin-stat-card.card:hover {
+  box-shadow: var(--admin-shadow-whisper-hover) !important;
+}
+
+.config-editor-row,
+.admin-main .config-editor-row {
+  box-shadow: var(--admin-shadow-whisper);
+  border-color: rgba(217, 226, 238, 0.6) !important;
+  border-radius: var(--admin-radius-md) !important;
+  background: #fff;
+  transition: box-shadow var(--admin-motion) var(--admin-easing);
+}
+
+.config-editor-row:hover,
+.admin-main .config-editor-row:hover {
+  box-shadow: var(--admin-shadow-whisper-hover);
+}
+
+.admin-summary-tile,
+.admin-detail-panel,
+.delta-summary-section {
+  box-shadow: var(--admin-shadow-whisper) !important;
+}
+
+.admin-empty {
+  box-shadow: none !important;
+}
+
+/* ---- Form controls: focus ring soft ---- */
+.admin-main .form-control,
+.admin-main .form-select {
+  border-radius: var(--admin-radius-sm) !important;
+  border-color: #d4dde9 !important;
+  transition:
+    border-color var(--admin-motion) var(--admin-easing),
+    box-shadow var(--admin-motion) var(--admin-easing);
+}
+
+.admin-main .form-control:focus,
+.admin-main .form-select:focus {
+  border-color: var(--admin-accent) !important;
+  box-shadow: var(--admin-shadow-focus) !important;
+}
+
+/* ---- Badges: pill totale, leggermente piu' alti ---- */
+.badge,
+.admin-main .badge {
+  border-radius: var(--admin-radius-pill) !important;
+  padding: 0.34em 0.68em !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Tile / summary / empty: radius piu' caldo + bordo morbido ---- */
+.admin-summary-tile {
+  border-radius: var(--admin-radius-md) !important;
+  border-color: rgba(217, 226, 238, 0.7) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8fd 100%) !important;
+  box-shadow: var(--admin-shadow-xs);
+  transition:
+    transform var(--admin-motion) var(--admin-easing),
+    box-shadow var(--admin-motion) var(--admin-easing);
+}
+
+.admin-summary-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-empty {
+  border-radius: var(--admin-radius-md) !important;
+  border-style: dashed !important;
+  border-color: rgba(180, 195, 215, 0.7) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+.admin-detail-panel {
+  border-radius: var(--admin-radius-md) !important;
+}
+
+.admin-code-block,
+.admin-main pre {
+  border-radius: var(--admin-radius-md) !important;
+  border-color: rgba(217, 226, 238, 0.7) !important;
+}
+
+/* ---- IRI search dropdown: radius + ombra "menu" moderna ---- */
+.iri-suggestions {
+  border-radius: var(--admin-radius-md) !important;
+  border-color: rgba(217, 226, 238, 0.6) !important;
+  box-shadow:
+    0 2px 6px rgba(20, 45, 90, 0.06),
+    0 14px 36px rgba(20, 45, 90, 0.12) !important;
+}
+
+.iri-suggestion-button {
+  transition: background var(--admin-motion) var(--admin-easing);
+}
+
+.iri-suggestion-button:hover,
+.iri-suggestion-button:focus {
+  background-color: var(--admin-accent-soft) !important;
+}
+
+/* ---- Modal: radius marcato + ombra "lifted" ---- */
+.admin-main .modal-content,
+.modal-content {
+  border-radius: var(--admin-radius-lg) !important;
+  border: 0 !important;
+  box-shadow: var(--admin-shadow-lg) !important;
+  overflow: hidden;
+}
+
+/* ---- User chip in topbar: gia' pill, ma piu' soft ---- */
+.admin-user-chip {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ---- Page title: tracking piu' moderno ---- */
+.admin-page-title {
+  letter-spacing: -0.015em !important;
+}
+
+/* ---- Delta summary cards (audit modal) ---- */
+.delta-summary-section {
+  border-radius: var(--admin-radius-sm) !important;
+}
+
+.delta-summary-modified {
+  border-radius: var(--admin-radius-sm) !important;
+}
+
+/* ============================================================
+ * MODERN THEME — TYPOGRAPHY REFINEMENT
+ * Body leggermente piu' piccolo + demibold (600) al posto di bold (700)
+ * su titoli/label/badge. Pesi piu' modulati, look "leccato".
+ * ============================================================ */
+
+html {
+  font-size: 15px;
+}
+
+.admin-main,
+.admin-sidebar,
+.admin-shell {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Page-level titles: demibold + tracking negativo */
+.admin-page-title,
+.admin-main > section > h1:first-child,
+.admin-main > section > .d-flex:first-child h1,
+.admin-main > section > div:first-child h1 {
+  font-weight: 600 !important;
+  font-size: clamp(1.4rem, 1rem + 0.9vw, 1.85rem) !important;
+  letter-spacing: -0.018em !important;
+}
+
+.admin-page-subtitle,
+.admin-main > section > p.text-secondary:first-of-type,
+.admin-main > section > .d-flex:first-child p.text-secondary,
+.admin-main > section > div:first-child p.text-secondary {
+  font-size: 0.92rem !important;
+}
+
+/* Card title */
+.admin-card-title,
+.admin-main .card-title {
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+}
+
+/* Stat card values */
+.admin-stat-value {
+  font-weight: 600 !important;
+  font-size: clamp(1.7rem, 1.2rem + 0.9vw, 2.25rem) !important;
+  letter-spacing: -0.02em;
+}
+
+.admin-stat-label {
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+}
+
+/* Summary tile (audit) */
+.admin-summary-tile small {
+  font-weight: 600 !important;
+}
+
+.admin-summary-tile div {
+  font-weight: 600 !important;
+  font-size: 1.55rem !important;
+  letter-spacing: -0.015em;
+}
+
+/* Badge: 600 invece di 700, leggermente meno pesante */
+.badge,
+.admin-main .badge {
+  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+}
+
+/* Buttons */
+.btn,
+.admin-main .btn {
+  font-weight: 600 !important;
+  font-size: 0.92rem;
+}
+
+.admin-main .btn.btn-xs,
+.admin-main .btn.btn-sm {
+  font-size: 0.85rem;
+}
+
+/* Tabelle: header in demibold, cell base in regular */
+.admin-main .table thead th {
+  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.05em;
+}
+
+.admin-main .table tbody td {
+  font-size: 0.9rem;
+}
+
+/* Sidebar: voci piu' piccole + medium weight (500) */
+.admin-sidebar .link-list-wrapper ul li a.list-item {
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.admin-sidebar .link-list-wrapper ul li a.list-item:hover,
+.admin-sidebar .link-list-wrapper ul li a.list-item:focus,
+.admin-sidebar .link-list-wrapper ul li a.list-item:active,
+.admin-sidebar .link-list-wrapper ul li a.list-item.active,
+.admin-sidebar .link-list-wrapper ul li a.list-item.active:hover,
+.admin-sidebar .link-list-wrapper ul li a.list-item.active:focus {
+  text-decoration: none !important;
+}
+
+.admin-sidebar .link-list-wrapper ul li a.list-item.active {
+  font-weight: 600 !important;
+}
+
+/* Neutralizza la barra verticale blu di Bootstrap Italia sull'item attivo.
+   Non e' un border-left ma uno pseudo ::after assolutamente posizionato a
+   left:0 con width:4px (cfr. bootstrap-italia.min.css). Con il pillow blu
+   pieno fa rumore visivo. */
+.admin-sidebar .link-list-wrapper ul li a.list-item.active::after,
+.admin-sidebar .link-list-wrapper ul li a.active::after,
+.admin-sidebar .link-list-wrapper ul li a.list-item.active::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Form label small */
+.admin-main .form-label.small,
+.admin-main label.small {
+  font-weight: 600 !important;
+  color: var(--admin-text-soft) !important;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+}
+
+/* Code inline: monospace coerente, peso normale */
+.admin-main code {
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+/* Brand in topbar: piu' compatto */
+.admin-brand h2 {
+  font-weight: 600 !important;
+  font-size: 1.05rem !important;
+}
+
+.admin-brand h3 {
+  font-weight: 500 !important;
+  font-size: 0.72rem !important;
+}
