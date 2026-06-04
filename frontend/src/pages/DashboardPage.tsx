@@ -1,8 +1,17 @@
+import { useMemo } from 'react'
 import { Badge, Card, CardBody, CardTitle, CardText, Icon, Row, Col } from 'design-react-kit'
 import { useHarvestRuns, useRunningInstances } from '../hooks/useHarvest'
 import { useRepositories } from '../hooks/useRepositories'
 import { useStatus } from '../hooks/useStatus'
 import { useDashboardCount } from '../hooks/useDashboard'
+import {
+  distinctNonZeroForYear,
+  groupByYear,
+  latestTwoYears,
+  totalForYear,
+  valueForYear,
+} from '../hooks/dashboardSelectors'
+import KpiCard from '../components/KpiCard'
 import RepoUrlLabel from '../components/RepoUrlLabel'
 import type { AggregateDashboardResponse } from '../api/types/dashboard'
 
@@ -40,19 +49,110 @@ export default function DashboardPage() {
   const runs = useHarvestRuns()
   const running = useRunningInstances()
   const countByStatus = useDashboardCount({ dimension: ['STATUS'] })
+  const countByType = useDashboardCount({ dimension: ['RESOURCE_TYPE'], granularity: 'YEARS' })
+  const countByHolder = useDashboardCount({ dimension: ['RIGHT_HOLDER'], granularity: 'YEARS' })
 
   const totalRepos = repos.data?.length ?? 0
   const inProgress = running.data?.length ?? 0
   const failedRuns = runs.data?.filter((r) => r.status === 'FAILURE').length ?? 0
+
+  // KPI risorse (snapshot annuale): valore corrente + valore anno precedente.
+  const kpis = useMemo(() => {
+    const byType = groupByYear(countByType.data)
+    const byHolder = groupByYear(countByHolder.data)
+    if (!byType && !byHolder) return null
+    const years = byType ? latestTwoYears(byType) : { current: null, previous: null }
+    return {
+      year: years.current,
+      total: {
+        curr: byType ? totalForYear(byType, years.current) : null,
+        prev: byType ? totalForYear(byType, years.previous) : null,
+      },
+      ontology: {
+        curr: byType ? valueForYear(byType, years.current, 'ONTOLOGY') : null,
+        prev: byType ? valueForYear(byType, years.previous, 'ONTOLOGY') : null,
+      },
+      vocabulary: {
+        curr: byType ? valueForYear(byType, years.current, 'CONTROLLED_VOCABULARY') : null,
+        prev: byType ? valueForYear(byType, years.previous, 'CONTROLLED_VOCABULARY') : null,
+      },
+      schema: {
+        curr: byType ? valueForYear(byType, years.current, 'SCHEMA') : null,
+        prev: byType ? valueForYear(byType, years.previous, 'SCHEMA') : null,
+      },
+      holders: {
+        curr: byHolder ? distinctNonZeroForYear(byHolder, years.current) : null,
+        prev: byHolder ? distinctNonZeroForYear(byHolder, years.previous) : null,
+      },
+    }
+  }, [countByType.data, countByHolder.data])
+
+  const kpiLoading = countByType.isLoading || countByHolder.isLoading
 
   return (
     <section className="admin-page">
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">Dashboard</h1>
-          <p className="admin-page-subtitle">Stato di salute dell'harvester NDC.</p>
+          <p className="admin-page-subtitle">
+            Numeri del catalogo (snapshot {kpis?.year ?? '—'}) e stato di salute dell'harvester.
+          </p>
         </div>
       </div>
+
+      {/* KPI risorse: snapshot anno corrente vs anno precedente */}
+      <Row className="g-3 mb-4">
+        <Col xs={12} md={6} lg={4} xl>
+          <KpiCard
+            title="Totale risorse"
+            value={kpis?.total.curr ?? null}
+            previous={kpis?.total.prev ?? null}
+            iconName="it-files"
+            color="primary"
+            loading={kpiLoading}
+          />
+        </Col>
+        <Col xs={12} md={6} lg={4} xl>
+          <KpiCard
+            title="Ontologie"
+            value={kpis?.ontology.curr ?? null}
+            previous={kpis?.ontology.prev ?? null}
+            iconName="it-list"
+            color="primary"
+            loading={kpiLoading}
+          />
+        </Col>
+        <Col xs={12} md={6} lg={4} xl>
+          <KpiCard
+            title="Vocabolari controllati"
+            value={kpis?.vocabulary.curr ?? null}
+            previous={kpis?.vocabulary.prev ?? null}
+            iconName="it-bookmark"
+            color="info"
+            loading={kpiLoading}
+          />
+        </Col>
+        <Col xs={12} md={6} lg={4} xl>
+          <KpiCard
+            title="Schemi"
+            value={kpis?.schema.curr ?? null}
+            previous={kpis?.schema.prev ?? null}
+            iconName="it-file-xml"
+            color="warning"
+            loading={kpiLoading}
+          />
+        </Col>
+        <Col xs={12} md={6} lg={4} xl>
+          <KpiCard
+            title="Titolari"
+            value={kpis?.holders.curr ?? null}
+            previous={kpis?.holders.prev ?? null}
+            iconName="it-user"
+            color="success"
+            loading={kpiLoading}
+          />
+        </Col>
+      </Row>
 
       <Row className="g-4 mb-4">
         <Col md={6} lg={3}>

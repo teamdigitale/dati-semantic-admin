@@ -9,6 +9,7 @@ import {
 import { useRepositories } from '../hooks/useRepositories'
 import { useIsAdmin } from '../hooks/useHasRole'
 import RepoUrlLabel from '../components/RepoUrlLabel'
+import RunFailureDetailModal from '../components/RunFailureDetailModal'
 import type { HarvesterRun, HarvesterRunStatus, RunningInstance } from '../api/types/harvest'
 
 /** Quanti batch (correlation_id) mostriamo per pagina nello Storico. */
@@ -262,7 +263,12 @@ function RunningTable({
         </thead>
         <tbody>
           {items.map((item) => {
-            const finished = item.pollsAfterFinish !== undefined
+            // Bug osservato: il BE puo' continuare a ritornare il RunningInstance
+            // (thread name attivo) anche dopo che lo status del HarvesterRun e' gia'
+            // diventato terminale. Trattiamo come "finito" anche questi: spinner solo
+            // se lo status del run e' davvero RUNNING.
+            const finished =
+              item.pollsAfterFinish !== undefined || item.run.status !== 'RUNNING'
             const startMs = new Date(item.run.startedAt).getTime()
             const endMs = item.frozenEndMs ?? Date.now()
             const elapsedMs = Math.max(0, endMs - startMs)
@@ -493,6 +499,7 @@ function BatchDetail({
   runs: HarvesterRun[]
   repoNameById: Map<string, string>
 }) {
+  const [detailRun, setDetailRun] = useState<HarvesterRun | null>(null)
   return (
     <div className="table-responsive p-2">
       <table className="admin-table table table-sm small mb-0 align-middle">
@@ -503,6 +510,7 @@ function BatchDetail({
             <th>Inizio</th>
             <th>Fine</th>
             <th style={{ width: 110 }}>Durata</th>
+            <th className="text-end" style={{ width: 60 }} />
           </tr>
         </thead>
         <tbody>
@@ -515,6 +523,9 @@ function BatchDetail({
               ) : (
                 <span className="text-secondary">—</span>
               )
+            const hasDetail =
+              (r.reason && r.reason.trim().length > 0) ||
+              (r.validationReport && r.validationReport.trim().length > 0)
             return (
               <tr key={r.id}>
                 <td>
@@ -528,11 +539,33 @@ function BatchDetail({
                 <td>
                   <code>{duration}</code>
                 </td>
+                <td className="text-end">
+                  {hasDetail && (
+                    <Button
+                      size="xs"
+                      color="secondary"
+                      outline
+                      title="Dettaglio errore / report"
+                      aria-label="Dettaglio errore / report"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDetailRun(r)
+                      }}
+                    >
+                      <Icon icon="it-zoom-in" size="sm" />
+                    </Button>
+                  )}
+                </td>
               </tr>
             )
           })}
         </tbody>
       </table>
+      <RunFailureDetailModal
+        isOpen={detailRun !== null}
+        onClose={() => setDetailRun(null)}
+        run={detailRun}
+      />
     </div>
   )
 }
