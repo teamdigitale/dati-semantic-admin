@@ -4,7 +4,9 @@
 # Stage 2: runtime distroless con il solo jar copiato.
 
 # -------- Stage 1: build --------
-FROM eclipse-temurin:21-jdk-alpine AS build
+# jammy (Ubuntu 22.04, glibc) e non alpine: il plugin gradle-node scarica un
+# binario node linux-x64 generico (glibc-linked) e non parte su Alpine/musl.
+FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /workspace
 
 # Cache delle dipendenze Gradle: copia prima i file di descrizione, poi il sorgente.
