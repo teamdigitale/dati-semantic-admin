@@ -14,6 +14,13 @@ import {
 import { useMe } from '../../hooks/useMe'
 import { useIsAdmin } from '../../hooks/useHasRole'
 
+function readCookie(name: string): string | undefined {
+  return document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split('=')[1]
+}
+
 interface NavEntry {
   label: string
   to: string
@@ -73,9 +80,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                     {me.data.name}
                   </span>
                 )}
-                <a className="btn btn-outline-white btn-sm" href="/logout">
-                  Logout
-                </a>
+                <form method="post" action="/logout" className="d-inline">
+                  <input type="hidden" name="_csrf" value={readCookie('XSRF-TOKEN') ?? ''} />
+                  <button type="submit" className="btn btn-outline-white btn-sm">
+                    Logout
+                  </button>
+                </form>
               </div>
             </HeaderRightZone>
           </HeaderContent>

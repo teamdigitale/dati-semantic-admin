@@ -6,9 +6,11 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-  packages: write
+env:
+  # Must match the deployment folder inside dati-semantic-kubernetes.
+  GITHUB_WORKFLOW: dati-semantic-admin
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -50,26 +52,67 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value={{date 'YYYYMMDD'}}-${{ github.run_number }}-{{sha}}
+            type=raw,value=latest
+
       - name: Build & push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/dati-semantic-admin:latest
-            ghcr.io/${{ github.repository_owner }}/dati-semantic-admin:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Triggers the update-config.yaml workflow on dati-semantic-kubernetes,
+  # which bumps the image tag in dati-semantic-admin/deployment.yaml on the
+  # dev branch and lets the Tekton pipeline roll it out.
+  deploy:
+    name: Bump tag on dati-semantic-kubernetes (dev)
+    needs: image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image name with tag
+        id: extractImage
+        run: |
+          IMAGE="$REGISTRY/$IMAGE_NAME"
+          TAG="$(date +'%Y%m%d')-${{ github.run_number }}-$(git rev-parse --short HEAD)"
+          echo "imageName=${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
+
+      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+        with:
+          owner: teamdigitale
+          repo: dati-semantic-kubernetes
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          workflow_file_name: update-config.yaml
+          ref: dev
+          wait_interval: 20
+          inputs: '{"serviceName": "${{ env.GITHUB_WORKFLOW }}", "imageWithNewTag": "${{ steps.extractImage.outputs.imageName }}"}'
