@@ -91,7 +91,10 @@ public class ProxyController {
         // ripartire il flow OAuth2 in un loop infinito di redirect. Lo mappiamo
         // a 502 Bad Gateway: e' un errore di gateway, non di autenticazione.
         if (upstream.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()) {
-            log.warn("[proxy] upstream {} {} returned 401 (backend rejected BFF bearer) -> mapping to 502", method, path);
+            log.warn(
+                    "[proxy] upstream {} {} returned 401 (backend rejected BFF bearer) -> mapping to 502",
+                    method,
+                    path);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
 
