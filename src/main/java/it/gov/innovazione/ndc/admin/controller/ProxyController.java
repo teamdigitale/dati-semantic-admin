@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -79,6 +80,24 @@ public class ProxyController {
         }
 
         ResponseEntity<byte[]> upstream = spec.retrieve().toEntity(byte[].class);
+
+        // Un 401 dall'upstream significa che il BE NDC ha rifiutato il bearer
+        // inoltrato dal BFF (token non valido per quel resource server, o
+        // configurazione errata), NON che la sessione utente sul BFF sia
+        // scaduta. Il 401 "legittimo" di sessione scaduta lo emette il
+        // SecurityFilterChain (HttpStatusEntryPoint su /bff/api/**) prima ancora
+        // di arrivare qui. Se rilanciassimo il 401 upstream tale e quale, la SPA
+        // (NdcClient) lo interpreterebbe come sessione scaduta e farebbe
+        // ripartire il flow OAuth2 in un loop infinito di redirect. Lo mappiamo
+        // a 502 Bad Gateway: e' un errore di gateway, non di autenticazione.
+        if (upstream.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()) {
+            log.warn(
+                    "[proxy] upstream {} {} returned 401 (backend rejected BFF bearer) -> mapping to 502",
+                    method,
+                    path);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+
         return forwardResponse(upstream);
     }
 
